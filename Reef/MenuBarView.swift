@@ -7,18 +7,18 @@
 
 import SwiftUI
 
-struct ContentView: View {
+struct MenuBarView: View {
     var body: some View {
         VStack {
             Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+//                .imageScale(.large)
+//                .foregroundStyle(.tint)
+            Text("Welcome to Reef!")
         }
         .padding()
     }
 }
 
 #Preview {
-    ContentView()
+    MenuBarView()
 }
