@@ -12,14 +12,17 @@ class ApplicationMenu: NSObject {
     let menu = NSMenu()
     
     func createMenu() -> NSMenu {
-        let menuBarView = MenuBarView()
+//        let menuBarView = MenuBarView()
         
-        let topView = NSHostingController(rootView: menuBarView)
-        topView.view.frame.size = CGSize(width: 225, height: 225)
+//        let topView = NSHostingController(rootView: menuBarView)
+//        topView.view.frame.size = CGSize(width: 225, height: 225)
         
-        let customMenuItem = NSMenuItem()
-        customMenuItem.view = topView.view
-        menu.addItem(customMenuItem)
+//        let customMenuItem = NSMenuItem()
+//        customMenuItem.view = topView.view
+//        menu.addItem(customMenuItem)
+        
+        menu.addItem(NSMenuItem())
+        
         menu.addItem(NSMenuItem.separator())
         
         let aboutMenuItem = NSMenuItem(

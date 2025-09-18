@@ -8,6 +8,7 @@
 import Foundation
 import Cocoa
 
+
 /*
  Adds Swift wrappers around the accessibility object class.
  */
@@ -46,8 +47,10 @@ extension AXUIElement {
     }
 }
 
+
 // Make AXError conform to Error protocol
 extension AXError: @retroactive Error {}
+
 
 // Private Core Accessibility API
 @_silgen_name("_AXUIElementGetWindow") @discardableResult
