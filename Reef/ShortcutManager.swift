@@ -23,8 +23,7 @@ let numberKeys: [KeyboardShortcuts.Key] = [
     .nine
 ]
 
-var frontApplication: Application?
-var boundWindow: Window?
+var config = Config("Default")
 
 extension KeyboardShortcuts.Name {
     
@@ -55,31 +54,32 @@ final class ShortcutManager {
     init() {
         for number in 0...9 {
             KeyboardShortcuts.onKeyUp(for: .bindShortcuts[number]) {
-               
-//                print(Window.getFrontWindow() as Any)
-//                print(Window.getFrontWindow()?.getBestTitle() ?? "Nope")
-               
-//                frontApplication = Application.getFrontApplication()
-//                print(frontApplication?.getFocusedWindow()?.getBestTitle() ?? "")
-//                print(frontApplication?.getFirstWindow()?.getBestTitle() ?? "")
+                let focusElement: FocusElement
+                if let window = Window.getFrontWindow() {
+                    focusElement = window
+                } else if let application = Application.getFrontApplication() {
+                    focusElement = application
+                } else {
+                    NSSound.beep()
+                    return
+                }
                 
-//                boundApplication = Application.getFrontApplication()
+                config.bind(focusElement, number)
+                AppDelegate.instance.updateMenu()
                 
-                boundWindow = Window.getFrontWindow()
-                
-                print("Binding to \(number)")
-
-                
+                print("Binding \(focusElement.title) to \(number)")
             }
             
             KeyboardShortcuts.onKeyUp(for: .activateShortcuts[number]) {
-                print("Activating \(number)")
+                guard let focusElement = config.bindings[number] else {
+                    NSSound.beep()
+                    return
+                }
                 
-//                try? frontApplication?.reopen()
-                boundWindow?.focus()
+                focusElement.focus()
+                print("Activating \(focusElement.title)")
             }
         }
-        
     }
 }
 
