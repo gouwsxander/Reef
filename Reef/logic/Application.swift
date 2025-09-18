@@ -8,11 +8,13 @@
 import Foundation
 import Cocoa
 
-class Application {
+
+class Application: FocusElement {
+    var title: String
+    var element: AXUIElement
+
     var runningApplication: NSRunningApplication
     var pid: pid_t
-    var element: AXUIElement
-    var localizedName: String?
     var bundleUrl: URL?
     
     init(_ runningApplication: NSRunningApplication) {
@@ -22,17 +24,21 @@ class Application {
         
         self.element = AXUIElementCreateApplication(self.pid)
         
-        self.localizedName = runningApplication.localizedName
+        self.title = runningApplication.localizedName ?? "Unknown Application"
         self.bundleUrl = runningApplication.bundleURL
     }
     
-    func focus(allWindows: Bool = false) {
-        self.runningApplication.activate(options: allWindows ? .activateAllWindows : [])
+    func focus() {
+        self.runningApplication.activate()
+    }
+
+    func activate(options: NSApplication.ActivationOptions = []) {
+        // Example option: .activateAllWindows
+        self.runningApplication.activate(options: options)
     }
     
     func getFocusedWindow() -> Window? {
-        guard let windowElement: AXUIElement = element.getValue(.focusedWindow) else {
-            print("Couldn't get focused window")
+        guard let windowElement: AXUIElement = element.getAttributeValue(.focusedWindow) else {
             return nil
         }
         
@@ -40,8 +46,7 @@ class Application {
     }
     
     func getFirstWindow() -> Window? {
-        guard let windowElements: [AXUIElement] = element.getValue(.windows) else {
-            print("Couldn't get window list")
+        guard let windowElements: [AXUIElement] = element.getAttributeValue(.windows) else {
             return nil
         }
         
@@ -73,7 +78,6 @@ class Application {
             completionHandler: completionHandler
         )
     }
-    
         
     static func getFrontApplication() -> Application? {
         guard let runningApplication = NSWorkspace.shared.frontmostApplication else {
@@ -83,6 +87,7 @@ class Application {
         return Application(runningApplication)
     }
 }
+
 
 enum ApplicationError: Error {
     case noBundleURL

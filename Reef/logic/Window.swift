@@ -8,23 +8,24 @@
 import Foundation
 import Cocoa
 
-class Window {
+
+class Window: FocusElement {
     var element: AXUIElement
-    var application: Application
     var cgWindowID: CGWindowID?
-    
+    var application: Application
+
     init(_ element: AXUIElement, _ application: Application) {
         self.element = element
+        self.cgWindowID = element.getWindowID()
         self.application = application
-        self.cgWindowID = element.getId()
     }
     
-    func getBestTitle() -> String {
-        if let title: String = self.element.getValue(.title) {
+    var title: String {
+        if let title: String = self.element.getAttributeValue(.title) {
             return title
         }
         
-        return application.localizedName ?? ""
+        return application.title
     }
     
     func focus() {
