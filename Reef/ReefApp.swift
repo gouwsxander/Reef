@@ -23,7 +23,7 @@ struct ReefApp: App {
     
 }
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     static private(set) var instance: AppDelegate!
     
     lazy var statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -36,6 +36,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusBarItem.button?.image = NSImage(systemSymbolName: "fish.fill", accessibilityDescription: "Reef menu")
         statusBarItem.button?.imagePosition = .imageLeading
         statusBarItem.menu = menu.createMenu()
+        
+        statusBarItem.menu?.delegate = self
     }
     
     
@@ -43,9 +45,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         config.bindings[sender.tag]?.focus()
     }
     
-    func updateMenu() {
-        // Obviously inefficient, but it shouldn't actually matter
-        menu.menu.removeAllItems()
+    
+    func menuWillOpen(_ menu: NSMenu) {
+        menu.removeAllItems()
         
         for i in 0...9 {
             let number = (10 - i) % 10
@@ -56,12 +58,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     keyEquivalent: String(number)
                 )
                 
-                // Terribly illedgible
-                // menuItem.image = NSImage(systemSymbolName: "\(number).square.fill", accessibilityDescription: "Number \(number)")
-
-                menuItem.tag = number // maybe use .target?
+                menuItem.tag = number
+                menuItem.representedObject = focusElement
                 
-                menu.menu.addItem(menuItem)
+                menu.addItem(menuItem)
             }
         }
     }

@@ -65,7 +65,6 @@ final class ShortcutManager {
                 }
                 
                 config.bind(focusElement, number)
-                AppDelegate.instance.updateMenu()
                 
                 print("Binding \(focusElement.title) to \(number)")
             }
