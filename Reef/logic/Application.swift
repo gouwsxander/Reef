@@ -29,11 +29,12 @@ class Application: FocusElement {
     }
     
     func focus() {
-        self.runningApplication.activate()
+        // Should update to activate with options decided by user
+        // e.g., .activateAllWindows
+        self.activate()
     }
 
     func activate(options: NSApplication.ActivationOptions = []) {
-        // Example option: .activateAllWindows
         self.runningApplication.activate(options: options)
     }
     

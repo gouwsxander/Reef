@@ -31,7 +31,7 @@ class Window: FocusElement {
     func focus() {
         do {
             try self.element.performAction(.raise)
-            self.application.focus()
+            self.application.activate()
         } catch {
             try? self.application.reopen()
         }
