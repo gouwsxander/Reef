@@ -20,6 +20,14 @@ class Window: FocusElement {
         self.application = application
     }
     
+//    public func encode(to encoder: any Encoder) throws {
+//        <#code#>
+//    }
+//    
+//    public required init(from decoder: any Decoder) throws {
+//        <#code#>
+//    }
+    
     var title: String {
         if let title: String = self.element.getAttributeValue(.title) {
             return title
@@ -29,6 +37,8 @@ class Window: FocusElement {
     }
     
     func focus() {
+        
+        print(self.element)
         do {
             try self.element.performAction(.raise)
             self.application.activate()

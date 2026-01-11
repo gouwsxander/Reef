@@ -9,7 +9,7 @@ import Foundation
 import Cocoa
 
 
-protocol FocusElement {
+protocol FocusElement { //: Codable {
     var title: String { get }
     var element: AXUIElement { get }
     func focus()

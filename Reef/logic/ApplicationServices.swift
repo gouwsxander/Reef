@@ -45,10 +45,16 @@ extension AXUIElement {
         
         return windowID
     }
+    
+    func test() -> Int? {
+        return self.getAttributeValue(.identifier)
+    }
 }
 
 
 // Make AXError conform to Error protocol
+extension AXError: @retroactive _BridgedNSError {}
+extension AXError: @retroactive _ObjectiveCBridgeableError {}
 extension AXError: @retroactive Error {}
 
 

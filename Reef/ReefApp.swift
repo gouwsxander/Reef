@@ -23,6 +23,7 @@ struct ReefApp: App {
     
 }
 
+@MainActor
 class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     static private(set) var instance: AppDelegate!
     
@@ -42,7 +43,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     
     
     @objc func focusWindowFromMenu(sender: NSMenuItem) {
-        config.bindings[sender.tag]?.focus()
+        ConfigManager.config.bindings[sender.tag]?.focus()
     }
     
     
@@ -51,7 +52,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         
         for i in 0...9 {
             let number = (10 - i) % 10
-            if let focusElement = config.bindings[number] {
+            if let focusElement = ConfigManager.config.bindings[number] {
                 let menuItem = NSMenuItem(
                     title: "\(number) | \(focusElement.title)",
                     action: #selector(focusWindowFromMenu),

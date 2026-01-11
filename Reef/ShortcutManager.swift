@@ -23,7 +23,6 @@ let numberKeys: [KeyboardShortcuts.Key] = [
     .nine
 ]
 
-var config = Config("Default")
 
 extension KeyboardShortcuts.Name {
     
@@ -49,6 +48,8 @@ extension KeyboardShortcuts.Name {
     
 }
 
+
+
 @MainActor
 final class ShortcutManager {
     init() {
@@ -64,13 +65,13 @@ final class ShortcutManager {
                     return
                 }
                 
-                config.bind(focusElement, number)
+                ConfigManager.config.bind(focusElement, number)
                 
                 print("Binding \(focusElement.title) to \(number)")
             }
             
             KeyboardShortcuts.onKeyUp(for: .activateShortcuts[number]) {
-                guard let focusElement = config.bindings[number] else {
+                guard let focusElement = ConfigManager.config.bindings[number] else {
                     NSSound.beep()
                     return
                 }

@@ -28,6 +28,28 @@ class Application: FocusElement {
         self.bundleUrl = runningApplication.bundleURL
     }
     
+//    private enum CodingKeys: String, CodingKey {
+//        case title
+//        case bundleUrl
+//    }
+//    
+//    public func encode(to encoder: any Encoder) throws {
+//        var container = encoder.container(keyedBy: CodingKeys.self)
+//        
+//        try container.encode(title, forKey: .title)
+//        try container.encodeIfPresent(bundleUrl, forKey: .bundleUrl)
+//    }
+//    
+//    public required init(from decoder: any Decoder) throws {
+//        let container = try decoder.container(keyedBy: CodingKeys.self)
+//        
+//        self.title = try container.decode(String.self, forKey: .title)
+//        self.bundleUrl = try container.decodeIfPresent(URL.self, forKey: .bundleUrl)
+//        
+//        
+//    }
+    
+
     func focus() {
         // Should update to activate with options decided by user
         // e.g., .activateAllWindows
