@@ -7,5 +7,6 @@
 
 # Project settings
 **/project.pbxproj
+Reef.xcodeproj/project.pbxproj
 
 Config/LocalSigning.xcconfig
