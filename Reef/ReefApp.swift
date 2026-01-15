@@ -49,7 +49,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     
     func menuWillOpen(_ menu: NSMenu) {
         menu.removeAllItems()
-        
+        print("Test")
         for i in 0...9 {
             let number = (10 - i) % 10
             if let focusElement = ConfigManager.config.bindings[number] {
