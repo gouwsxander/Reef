@@ -4,3 +4,5 @@
 # Xcode user-specific
 **/xcuserdata/
 **/*.xcuserstate
+
+Config/LocalSigning.xcconfig
