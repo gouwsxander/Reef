@@ -30,6 +30,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     lazy var statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     let menu = ApplicationMenu()
     
+    var panelController: PanelController!
+    
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.instance = self
         
@@ -39,11 +41,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusBarItem.menu = menu.createMenu()
         
         statusBarItem.menu?.delegate = self
+        
+        panelController = PanelController()
+        panelController.createPanel()
     }
     
     
     @objc func focusWindowFromMenu(sender: NSMenuItem) {
         ConfigManager.config.bindings[sender.tag]?.focus()
+    }
+    
+    
+    @objc func openPanel(sender: NSMenuItem) {
+        if panelController.panel.isVisible {
+            panelController.panel.orderOut(nil)
+        } else {
+            panelController.panel.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+        }
     }
     
     
@@ -65,8 +80,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 menu.addItem(menuItem)
             }
         }
+        
+        // Open panel
+        let menuItem = NSMenuItem(
+            title: "Open panel",
+            action: #selector(openPanel),
+            keyEquivalent: ""
+        )
+        
+        menu.addItem(menuItem)
     }
-    
-}
 
+
+}
 
