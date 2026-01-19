@@ -9,7 +9,7 @@ import Foundation
 import Cocoa
 
 
-class Window: FocusElement {
+class Window {
     var element: AXUIElement
     var cgWindowID: CGWindowID?
     var application: Application

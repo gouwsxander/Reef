@@ -55,29 +55,27 @@ final class ShortcutManager {
     init() {
         for number in 0...9 {
             KeyboardShortcuts.onKeyUp(for: .bindShortcuts[number]) {
-                let focusElement: FocusElement
-                if let window = Window.getFrontWindow() {
-                    focusElement = window
-                } else if let application = Application.getFrontApplication() {
-                    focusElement = application
-                } else {
+                guard let application = Application.getFrontApplication() else {
                     NSSound.beep()
                     return
                 }
                 
-                ConfigManager.config.bind(focusElement, number)
+                guard ConfigManager.config.bind(application, number) else {
+                    NSSound.beep()
+                    return
+                }
                 
-                print("Binding \(focusElement.title) to \(number)")
+                print("Binding \(application.title) to \(number)")
             }
             
             KeyboardShortcuts.onKeyUp(for: .activateShortcuts[number]) {
-                guard let focusElement = ConfigManager.config.bindings[number] else {
+                guard let binding = ConfigManager.config.bindings[number] else {
                     NSSound.beep()
                     return
                 }
                 
-                focusElement.focus()
-                print("Activating \(focusElement.title)")
+                binding.focus()
+                print("Activating \(binding.title)")
             }
         }
     }

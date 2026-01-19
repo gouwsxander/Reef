@@ -10,36 +10,66 @@ import Cocoa
 import SwiftData
 
 
+struct AppBinding {
+    let bundleIdentifier: String
+    let bundleURL: URL
+    let displayName: String
+
+    var title: String { displayName }
+
+    func focus() {
+        Application.activateOrLaunch(
+            bundleIdentifier: bundleIdentifier,
+            bundleURL: bundleURL
+        )
+    }
+}
+
+
 //@Model
 class Config {
     @Attribute(.unique) var name: String
-    var bindings: [FocusElement?]
-    var elementMap: [AXUIElement: Int]
+    var bindings: [AppBinding?]
+    var appMap: [String: Int]
     var lastUsedDate: Date?
     
     init(_ name: String) {
         self.name = name
         
         self.bindings = Array(repeating: nil, count: 10)
-        self.elementMap = [:]
+        self.appMap = [:]
         
         self.lastUsedDate = Date.now
     }
     
-    func bind(_ focusElement: FocusElement, _ index: Int) {
-        if let currentIndex = elementMap[focusElement.element] {
-            // If element is already bound, unbind from previous index
+    @discardableResult
+    func bind(_ application: Application, _ index: Int) -> Bool {
+        guard
+            let bundleIdentifier = application.runningApplication.bundleIdentifier,
+            let bundleURL = application.bundleUrl
+        else {
+            return false
+        }
+        
+        let binding = AppBinding(
+            bundleIdentifier: bundleIdentifier,
+            bundleURL: bundleURL,
+            displayName: application.title
+        )
+        
+        if let currentIndex = appMap[bundleIdentifier] {
             bindings[currentIndex] = nil
         }
         
-        self.bindings[index] = focusElement
-        self.elementMap[focusElement.element] = index
+        bindings[index] = binding
+        appMap[bundleIdentifier] = index
+        return true
     }
     
-    func unbind(_ focusElement: FocusElement) {
-        if let index = elementMap[focusElement.element] {
+    func unbind(bundleIdentifier: String) {
+        if let index = appMap[bundleIdentifier] {
             bindings[index] = nil
-            elementMap[focusElement.element] = nil
+            appMap[bundleIdentifier] = nil
         }
     }
 }
