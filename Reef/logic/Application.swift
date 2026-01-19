@@ -128,6 +128,25 @@ class Application {
         let configuration = NSWorkspace.OpenConfiguration()
         NSWorkspace.shared.openApplication(at: bundleURL, configuration: configuration) { _, _ in }
     }
+    
+    static func getWindowList() {
+        let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
+        guard let windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else {
+            return
+        }
+        
+//        print(windowList)
+        
+        for window in windowList {
+//            print(window["kCGWindowOwnerName"] ?? "Unknown owner!")
+            
+            // For real use case, use kCGWindowOwnerPID
+            if window["kCGWindowOwnerName"] as! String == "Google Chrome" {
+                print(window["kCGWindowBounds"])
+            }
+        }
+        
+    }
 }
 
 
