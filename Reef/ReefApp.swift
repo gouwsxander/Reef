@@ -52,15 +52,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         print("Test")
         for i in 0...9 {
             let number = (10 - i) % 10
-            if let focusElement = ConfigManager.config.bindings[number] {
+            if let binding = ConfigManager.config.bindings[number] {
                 let menuItem = NSMenuItem(
-                    title: "\(number) | \(focusElement.title)",
+                    title: "\(number) | \(binding.title)",
                     action: #selector(focusWindowFromMenu),
                     keyEquivalent: String(number)
                 )
                 
                 menuItem.tag = number
-                menuItem.representedObject = focusElement
+                menuItem.representedObject = binding
                 
                 menu.addItem(menuItem)
             }

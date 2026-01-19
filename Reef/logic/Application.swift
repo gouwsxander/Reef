@@ -9,7 +9,9 @@ import Foundation
 import Cocoa
 
 
-class Application: FocusElement {
+// NOTE: This file relies on AXUIElement helpers from logic/ApplicationServices.swift.
+// NOTE: This file also references `Window` from logic/Window.swift.
+class Application {
     var title: String
     var element: AXUIElement
 
@@ -108,6 +110,23 @@ class Application: FocusElement {
         }
         
         return Application(runningApplication)
+    }
+    
+    static func activateOrLaunch(
+        bundleIdentifier: String,
+        bundleURL: URL,
+        options: NSApplication.ActivationOptions = []
+    ) {
+        if let runningApplication = NSRunningApplication
+            .runningApplications(withBundleIdentifier: bundleIdentifier)
+            .first
+        {
+            runningApplication.activate(options: options)
+            return
+        }
+        
+        let configuration = NSWorkspace.OpenConfiguration()
+        NSWorkspace.shared.openApplication(at: bundleURL, configuration: configuration) { _, _ in }
     }
 }
 
