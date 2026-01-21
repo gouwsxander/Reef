@@ -77,10 +77,14 @@ final class ShortcutManager {
                 binding.focus()
                 print("Activating \(binding.title)")
                 
-                let application = Application.getFrontApplication()
-                if let wl = application?.getAXWindows() {
+                if let application = Application.getFrontApplication() {
+//                    for attr in application.listAvailableAttributes() {
+//                        print(attr)
+//                    }
+                    let wl = application.getAXWindows()
                     for w in wl {
-                        print(w.getWindowID())
+                        let window = Window(w, application)
+                        print(window.title)
                     }
                 }
             }
