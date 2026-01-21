@@ -76,7 +76,12 @@ final class ShortcutManager {
                 
                 binding.focus()
                 print("Activating \(binding.title)")
-                let wl = binding.getWindowList()
+                
+                let wl = binding.getAXWindows()
+                for w in wl {
+                    let window = Window(w, binding)
+                    print(window.title)
+                }
             }
         }
     }

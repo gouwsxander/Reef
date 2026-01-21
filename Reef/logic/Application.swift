@@ -126,20 +126,49 @@ class Application {
         let configuration = NSWorkspace.OpenConfiguration()
         NSWorkspace.shared.openApplication(at: bundleURL, configuration: configuration) { _, _ in }
     }
-    
-    func getWindowList() -> [[String: Any]] {
-        let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
-        guard let allWindows = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else {
+
+    // NOTE: Only returns windows in current Desktop (but multiple monitors does work)
+    func getAXWindows() -> [AXUIElement] {
+        guard let windows: [AXUIElement] = self.element.getAttributeValue(.windows) else {
             return []
         }
         
-        // TODO: Change to use PID
-        let applicationWindows = allWindows.filter { window in
-            return window["kCGWindowOwnerName"] as! String == self.title
+        return windows
+    }
+    
+    func getWindows() -> [Window] {
+        let axWindows = self.getAXWindows()
+        
+        return axWindows.map { axWindow in
+            Window(axWindow, self)
+        }
+    }
+    
+    func listAvailableAttributes() -> [String] {
+        var attributesRef: CFArray?
+        let result = AXUIElementCopyAttributeNames(self.element, &attributesRef)
+        
+        guard result == .success, let attributes = attributesRef as? [String] else {
+            return []
         }
         
-        return applicationWindows
+        return attributes
     }
+    
+//    func getCGWindowList() -> [[String: Any]] {
+//        let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
+//        guard let allWindows = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else {
+//            return []
+//        }
+//
+//        // TODO: Change to use PID? Maybe use both with ||
+//        let applicationWindows = allWindows.filter { window in
+//            return window["kCGWindowOwnerName"] as! String == self.title
+//        }
+//
+//        return applicationWindows
+//    }
+    
 }
 
 
