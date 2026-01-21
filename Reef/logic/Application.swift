@@ -150,6 +150,17 @@ class Application {
         
         return windows
     }
+    
+    func listAvailableAttributes() -> [String] {
+        var attributesRef: CFArray?
+        let result = AXUIElementCopyAttributeNames(self.element, &attributesRef)
+        
+        guard result == .success, let attributes = attributesRef as? [String] else {
+            return []
+        }
+        
+        return attributes
+    }
 }
 
 
