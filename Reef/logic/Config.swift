@@ -10,26 +10,10 @@ import Cocoa
 import SwiftData
 
 
-struct AppBinding {
-    let bundleIdentifier: String
-    let bundleURL: URL
-    let displayName: String
-
-    var title: String { displayName }
-
-    func focus() {
-        Application.activateOrLaunch(
-            bundleIdentifier: bundleIdentifier,
-            bundleURL: bundleURL
-        )
-    }
-}
-
-
 //@Model
 class Config {
     @Attribute(.unique) var name: String
-    var bindings: [AppBinding?]
+    var bindings: [Application?]
     var appMap: [String: Int]
     var lastUsedDate: Date?
     
@@ -44,24 +28,15 @@ class Config {
     
     @discardableResult
     func bind(_ application: Application, _ index: Int) -> Bool {
-        guard
-            let bundleIdentifier = application.runningApplication.bundleIdentifier,
-            let bundleURL = application.bundleUrl
-        else {
+        guard let bundleIdentifier = application.runningApplication.bundleIdentifier else {
             return false
         }
-        
-        let binding = AppBinding(
-            bundleIdentifier: bundleIdentifier,
-            bundleURL: bundleURL,
-            displayName: application.title
-        )
-        
+
         if let currentIndex = appMap[bundleIdentifier] {
             bindings[currentIndex] = nil
         }
-        
-        bindings[index] = binding
+
+        bindings[index] = application
         appMap[bundleIdentifier] = index
         return true
     }
@@ -116,6 +91,4 @@ class ConfigManager {
 //        return config
 //    }
 }
-
-
 

@@ -53,8 +53,6 @@ class Application {
     
 
     func focus() {
-        // Should update to activate with options decided by user
-        // e.g., .activateAllWindows
         self.activate()
     }
 
