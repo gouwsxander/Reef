@@ -129,18 +129,26 @@ class Application {
         NSWorkspace.shared.openApplication(at: bundleURL, configuration: configuration) { _, _ in }
     }
     
-    func getWindowList() -> [[String: Any]] {
+    func getCGWindowList() -> [[String: Any]] {
         let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
         guard let allWindows = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else {
             return []
         }
         
-        // TODO: Change to use PID
+        // TODO: Change to use PID? Maybe use both with ||
         let applicationWindows = allWindows.filter { window in
             return window["kCGWindowOwnerName"] as! String == self.title
         }
         
         return applicationWindows
+    }
+    
+    func getAXWindows() -> [AXUIElement] {
+        guard let windows: [AXUIElement] = self.element.getAttributeValue(.windows) else {
+            return []
+        }
+        
+        return windows
     }
 }
 
