@@ -54,7 +54,7 @@ extension KeyboardShortcuts.Name {
 final class ShortcutManager {
     private var globalEventMonitor: Any?
     private var isControlDown = false
-    private var isPanelOpen = false
+//    private var isPanelOpen = false
     
     init() {
         for number in 0...9 {
@@ -73,21 +73,30 @@ final class ShortcutManager {
             }
             
             KeyboardShortcuts.onKeyDown(for: .activateShortcuts[number]) {
-                self.isPanelOpen = true
                 print("Activate down")
-//                guard let binding = ConfigManager.config.bindings[number] else {
-//                    NSSound.beep()
-//                    return
-//                }
-//
-//                binding.focus()
-//                print("Activating \(binding.title)")
-//
-//                let wl = binding.getAXWindows()
-//                for w in wl {
-//                    let window = Window(w, binding)
-//                    print(window.title)
-//                }
+                
+                guard let binding = ConfigManager.config.bindings[number] else {
+                    NSSound.beep()
+                    return
+                }
+                
+//                self.isPanelOpen = true
+                
+                if let cycle = CycleManager.cycle {
+                    cycle.next()
+                    print(cycle.getWindow().title)
+                } else {
+                    var index = 0
+                    
+                    // Better to implement Equatable for Application type...
+                    if Application.getFrontApplication()?.title == binding.title {
+                        index = 1
+                    }
+                    
+                    CycleManager.setCycle(application: binding, index: index)
+                    print(CycleManager.cycle?.getWindow().title ?? "Hm")
+                }
+                
             }
         }
         
@@ -96,9 +105,12 @@ final class ShortcutManager {
             
             let controlPressed = event.modifierFlags.contains(.control)
             
-            if self?.isControlDown == true && !controlPressed && self?.isPanelOpen == true {
-                print("Control released")
-                self?.isPanelOpen = false
+            if self?.isControlDown == true && !controlPressed {
+                if let cycle = CycleManager.cycle {
+                    print("Control released")
+                    cycle.getWindow().focus()
+                    CycleManager.resetCycle()
+                }
             }
             
             self?.isControlDown = controlPressed
