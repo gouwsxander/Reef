@@ -45,6 +45,14 @@ extension KeyboardShortcuts.Name {
             )
         )
     }
+
+    static let switcher = Self(
+        "switcher",
+        default: .init(
+            .backtick,
+            modifiers: [.control]
+        )
+    )
     
 }
 
@@ -82,4 +90,3 @@ final class ShortcutManager {
         }
     }
 }
-

@@ -8,12 +8,11 @@
 import SwiftUI
 
 struct PanelUI: View {
-    @State private var elements = ["Element A", "Element B", "Element C", "Element D"]
-    @State private var selectedIndex = 0
+    @ObservedObject var model: SwitcherViewModel
     
     var body: some View {
         VStack(spacing: 0) {
-            Text("Select Window")
+            Text(model.title)
                 .font(.headline)
                 .padding()
             
@@ -21,18 +20,18 @@ struct PanelUI: View {
             
             ScrollView {
                 VStack(spacing: 4) {
-                    ForEach(Array(elements.enumerated()), id: \.offset) { index, element in
+                    ForEach(Array(model.items.enumerated()), id: \.element.id) { index, element in
                         HStack {
-                            Text(element)
-                                .foregroundColor(index == selectedIndex ? .white : .primary)
+                            Text(element.title)
+                                .foregroundColor(index == model.selectedIndex ? .white : .primary)
                             Spacer()
                         }
                         .padding(.horizontal, 16)
                         .padding(.vertical, 12)
-                        .background(index == selectedIndex ? Color.accentColor : Color.clear)
+                        .background(index == model.selectedIndex ? Color.accentColor : Color.clear)
                         .cornerRadius(6)
                         .onTapGesture {
-                            selectedIndex = index
+                            model.selectedIndex = index
                         }
                     }
                 }

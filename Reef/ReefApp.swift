@@ -41,9 +41,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusBarItem.menu = menu.createMenu()
         
         statusBarItem.menu?.delegate = self
-        
+
         panelController = PanelController()
-        panelController.createPanel()
+
+        KeyboardShortcuts.onKeyDown(for: .switcher) { [weak self] in
+            self?.panelController.handleSwitcherHotkey()
+        }
     }
     
     
@@ -93,4 +96,3 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
 
 }
-

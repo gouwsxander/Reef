@@ -23,7 +23,8 @@ final class Panel: NSPanel, NSWindowDelegate {
         self.collectionBehavior.insert(.canJoinAllSpaces)
         self.titleVisibility = .hidden
         self.titlebarAppearsTransparent = true
-        self.isMovableByWindowBackground = true
+        self.isMovable = false
+        self.isMovableByWindowBackground = false
         self.isReleasedWhenClosed = false
         self.isOpaque = false
         self.delegate = self
