@@ -36,6 +36,20 @@ final class Panel: NSPanel, NSWindowDelegate {
         effectView.material = .hudWindow
         effectView.blendingMode = .behindWindow
         effectView.state = .active
+        effectView.appearance = NSAppearance(named: .vibrantDark)
+
+        // Dark tint layer to keep the panel dark even in Light Mode.
+        let tintView = NSView(frame: .zero)
+        tintView.translatesAutoresizingMaskIntoConstraints = false
+        tintView.wantsLayer = true
+        tintView.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.28).cgColor
+        effectView.addSubview(tintView)
+        NSLayoutConstraint.activate([
+            tintView.leadingAnchor.constraint(equalTo: effectView.leadingAnchor),
+            tintView.trailingAnchor.constraint(equalTo: effectView.trailingAnchor),
+            tintView.topAnchor.constraint(equalTo: effectView.topAnchor),
+            tintView.bottomAnchor.constraint(equalTo: effectView.bottomAnchor)
+        ])
         
         self.contentView = effectView
     }

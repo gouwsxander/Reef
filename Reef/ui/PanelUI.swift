@@ -14,7 +14,9 @@ struct PanelUI: View {
         VStack(spacing: 0) {
             Text(model.title)
                 .font(.headline)
-                .padding()
+                .padding(.top, 8)
+                .padding(.bottom, 10)
+                .padding(.horizontal, 16)
             
             Divider()
             
@@ -39,6 +41,7 @@ struct PanelUI: View {
             }
         }
         .frame(width: 400, height: 300)
+        .ignoresSafeArea(.container, edges: .top)
         .background(Color(NSColor.windowBackgroundColor).opacity(0.01))
     }
 }
