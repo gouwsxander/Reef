@@ -48,23 +48,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             self?.panelController.handleSwitcherHotkey()
         }
     }
-    
-    
+
+
     @objc func focusWindowFromMenu(sender: NSMenuItem) {
         ConfigManager.config.bindings[sender.tag]?.focus()
     }
-    
-    
-    @objc func openPanel(sender: NSMenuItem) {
-        if panelController.panel.isVisible {
-            panelController.panel.orderOut(nil)
-        } else {
-            panelController.panel.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
-        }
-    }
-    
-    
+
     func menuWillOpen(_ menu: NSMenu) {
         menu.removeAllItems()
         print("Test")
@@ -83,15 +72,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 menu.addItem(menuItem)
             }
         }
-        
-        // Open panel
-        let menuItem = NSMenuItem(
-            title: "Open panel",
-            action: #selector(openPanel),
-            keyEquivalent: ""
-        )
-        
-        menu.addItem(menuItem)
     }
 
 
