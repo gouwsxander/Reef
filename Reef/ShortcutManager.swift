@@ -46,12 +46,16 @@ extension KeyboardShortcuts.Name {
         )
     }
     
+    static let ctrlKey: KeyboardShortcuts.Name = Self("control", default: .init(.control))
 }
-
 
 
 @MainActor
 final class ShortcutManager {
+    private var globalEventMonitor: Any?
+    private var isControlDown = false
+    private var isPanelOpen = false
+    
     init() {
         for number in 0...9 {
             KeyboardShortcuts.onKeyUp(for: .bindShortcuts[number]) {
@@ -68,21 +72,42 @@ final class ShortcutManager {
                 print("Binding \(application.title) to \(number)")
             }
             
-            KeyboardShortcuts.onKeyUp(for: .activateShortcuts[number]) {
-                guard let binding = ConfigManager.config.bindings[number] else {
-                    NSSound.beep()
-                    return
-                }
-                
-                binding.focus()
-                print("Activating \(binding.title)")
-                
-                let wl = binding.getAXWindows()
-                for w in wl {
-                    let window = Window(w, binding)
-                    print(window.title)
-                }
+            KeyboardShortcuts.onKeyDown(for: .activateShortcuts[number]) {
+                self.isPanelOpen = true
+                print("Activate down")
+//                guard let binding = ConfigManager.config.bindings[number] else {
+//                    NSSound.beep()
+//                    return
+//                }
+//
+//                binding.focus()
+//                print("Activating \(binding.title)")
+//
+//                let wl = binding.getAXWindows()
+//                for w in wl {
+//                    let window = Window(w, binding)
+//                    print(window.title)
+//                }
             }
+        }
+        
+        // Global event monitor needed because KeyboardShortcuts doesn't like detecting just a control up... (.control is modifier not regular key?)
+        self.globalEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
+            
+            let controlPressed = event.modifierFlags.contains(.control)
+            
+            if self?.isControlDown == true && !controlPressed && self?.isPanelOpen == true {
+                print("Control released")
+                self?.isPanelOpen = false
+            }
+            
+            self?.isControlDown = controlPressed
+        }
+    }
+    
+    deinit {
+        if let globalEventMonitor {
+            NSEvent.removeMonitor(globalEventMonitor)
         }
     }
 }
