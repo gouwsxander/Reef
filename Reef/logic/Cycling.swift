@@ -21,11 +21,11 @@ class Cycling {
     }
     
     func next() {
-        self.index = (self.index + 1) % windows.count
+        self.index += 1
     }
     
     func getWindow() -> Window {
-        return self.windows[self.index]
+        return self.windows[self.index % windows.count]
     }
 }
 
