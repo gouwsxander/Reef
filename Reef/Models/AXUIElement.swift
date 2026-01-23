@@ -1,5 +1,5 @@
 //
-//  ApplicationServices.swift
+//  AXUIElement.swift
 //  Reef
 //
 //  Created by Xander Gouws on 16-09-2025.
@@ -9,11 +9,8 @@ import Foundation
 import Cocoa
 
 
-/*
- Adds Swift wrappers around the accessibility object class.
- */
+// Adds Swift wrappers around the accessibility object class.
 extension AXUIElement {
-    
     func getAttributeValue<T>(_ attribute: NSAccessibility.Attribute) -> T? {
         var value: AnyObject?
         

@@ -9,8 +9,6 @@ import Foundation
 import Cocoa
 
 
-// NOTE: This file relies on AXUIElement helpers from logic/ApplicationServices.swift.
-// NOTE: This file also references `Window` from logic/Window.swift.
 class Application {
     var title: String
     var element: AXUIElement
@@ -30,28 +28,6 @@ class Application {
         self.bundleUrl = runningApplication.bundleURL
     }
     
-//    private enum CodingKeys: String, CodingKey {
-//        case title
-//        case bundleUrl
-//    }
-//    
-//    public func encode(to encoder: any Encoder) throws {
-//        var container = encoder.container(keyedBy: CodingKeys.self)
-//        
-//        try container.encode(title, forKey: .title)
-//        try container.encodeIfPresent(bundleUrl, forKey: .bundleUrl)
-//    }
-//    
-//    public required init(from decoder: any Decoder) throws {
-//        let container = try decoder.container(keyedBy: CodingKeys.self)
-//        
-//        self.title = try container.decode(String.self, forKey: .title)
-//        self.bundleUrl = try container.decodeIfPresent(URL.self, forKey: .bundleUrl)
-//        
-//        
-//    }
-    
-
     func focus() {
         self.activate()
     }
@@ -127,8 +103,8 @@ class Application {
         NSWorkspace.shared.openApplication(at: bundleURL, configuration: configuration) { _, _ in }
     }
 
-    // NOTE: Only returns windows in current Desktop (but multiple monitors does work)
     func getAXWindows() -> [AXUIElement] {
+        // NOTE: Only returns windows in current Desktop (but multiple monitors does work)
         guard let windows: [AXUIElement] = self.element.getAttributeValue(.windows) else {
             return []
         }
@@ -154,21 +130,6 @@ class Application {
         
         return attributes
     }
-    
-//    func getCGWindowList() -> [[String: Any]] {
-//        let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
-//        guard let allWindows = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else {
-//            return []
-//        }
-//
-//        // TODO: Change to use PID? Maybe use both with ||
-//        let applicationWindows = allWindows.filter { window in
-//            return window["kCGWindowOwnerName"] as! String == self.title
-//        }
-//
-//        return applicationWindows
-//    }
-    
 }
 
 
