@@ -9,7 +9,8 @@ import Foundation
 import Cocoa
 
 
-class Window {
+class Window: Identifiable {
+    var id: CGWindowID { cgWindowID ?? 0 }
     var element: AXUIElement
     var cgWindowID: CGWindowID?
     var application: Application

@@ -9,125 +9,77 @@
 import KeyboardShortcuts
 import Cocoa
 
-
 let numberKeys: [KeyboardShortcuts.Key] = [
-    .zero,
-    .one,
-    .two,
-    .three,
-    .four,
-    .five,
-    .six,
-    .seven,
-    .eight,
-    .nine
+    .zero, .one, .two, .three, .four,
+    .five, .six, .seven, .eight, .nine
 ]
 
-
 extension KeyboardShortcuts.Name {
-    
     static let bindShortcuts: [KeyboardShortcuts.Name] = (0...9).map { number in
-        Self(
-            "bind\(number)",
-            default: .init(
-                numberKeys[number],
-                modifiers: [.control, .option]
-            )
-        )
+        Self("bind\(number)", default: .init(numberKeys[number], modifiers: [.control, .option]))
     }
     
     static let activateShortcuts: [KeyboardShortcuts.Name] = (0...9).map { number in
-        Self(
-            "activate\(number)",
-            default: .init(
-                numberKeys[number],
-                modifiers: [.control]
-            )
-        )
+        Self("activate\(number)", default: .init(numberKeys[number], modifiers: [.control]))
     }
-
-    static let switcher = Self(
-        "switcher",
-        default: .init(
-            .backtick,
-            modifiers: [.control]
-        )
-    )
-    
-    static let ctrlKey: KeyboardShortcuts.Name = Self("control", default: .init(.control))
 }
-
 
 @MainActor
 final class ShortcutManager {
-    private var globalEventMonitor: Any?
-    private var isControlDown = false
-//    private var isPanelOpen = false
+    private let switcher: WindowSwitcherController
     
-    init() {
+    init(switcher: WindowSwitcherController) {
+        self.switcher = switcher
+        setupShortcuts()
+    }
+    
+    private func setupShortcuts() {
+        // Ctrl + Alt + [Number] - Bind application
         for number in 0...9 {
             KeyboardShortcuts.onKeyUp(for: .bindShortcuts[number]) {
-                guard let application = Application.getFrontApplication() else {
-                    NSSound.beep()
-                    return
-                }
-                
-                guard ConfigManager.config.bind(application, number) else {
-                    NSSound.beep()
-                    return
-                }
-                
-                print("Binding \(application.title) to \(number)")
+                self.handleBind(number: number)
             }
             
             KeyboardShortcuts.onKeyDown(for: .activateShortcuts[number]) {
-                print("Activate down")
-                
-                guard let binding = ConfigManager.config.bindings[number] else {
-                    NSSound.beep()
-                    return
-                }
-                
-//                self.isPanelOpen = true
-                
-                if let cycle = CycleManager.cycle {
-                    cycle.next()
-                    print(cycle.getWindow().title)
-                } else {
-                    var index = 0
-                    
-                    // Better to implement Equatable for Application type...
-                    if Application.getFrontApplication()?.title == binding.title {
-                        index = 1
-                    }
-                    
-                    CycleManager.setCycle(application: binding, index: index)
-                    print(CycleManager.cycle?.getWindow().title ?? "Hm")
-                }
-                
+                self.handleActivate(number: number)
             }
-        }
-        
-        // Global event monitor needed because KeyboardShortcuts doesn't like detecting just a control up... (.control is modifier not regular key?)
-        self.globalEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
-            
-            let controlPressed = event.modifierFlags.contains(.control)
-            
-            if self?.isControlDown == true && !controlPressed {
-                if let cycle = CycleManager.cycle {
-                    print("Control released")
-                    cycle.getWindow().focus()
-                    CycleManager.resetCycle()
-                }
-            }
-            
-            self?.isControlDown = controlPressed
         }
     }
     
-    deinit {
-        if let globalEventMonitor {
-            NSEvent.removeMonitor(globalEventMonitor)
+    private func handleBind(number: Int) {
+        guard let application = Application.getFrontApplication() else {
+            NSSound.beep()
+            return
         }
+        
+        guard ConfigManager.config.bind(application, number) else {
+            NSSound.beep()
+            return
+        }
+        
+        print("✓ Bound \(application.title) to \(number)")
+    }
+    
+    private func handleActivate(number: Int) {
+        guard let binding = ConfigManager.config.bindings[number] else {
+            NSSound.beep()
+            return
+        }
+        
+        // If panel is already visible, cycle to next window
+        if switcher.panel.isVisible {
+            switcher.cycleNext()
+            return
+        }
+        
+        // Determine starting index
+        var startIndex = 0
+        if let frontApp = Application.getFrontApplication(),
+           frontApp.title == binding.title {
+            // Already on this app, start at second window
+            startIndex = 1
+        }
+        
+        switcher.showSwitcher(for: binding, startIndex: startIndex)
     }
 }

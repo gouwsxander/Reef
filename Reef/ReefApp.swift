@@ -10,8 +10,6 @@ import KeyboardShortcuts
 
 @main
 struct ReefApp: App {
-   
-    @State private var shortcutManager = ShortcutManager()
     
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     var body: some Scene {
@@ -26,11 +24,11 @@ struct ReefApp: App {
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     static private(set) var instance: AppDelegate!
+    private var windowSwitcher: WindowSwitcherController!
+    @State private var shortcutManager: ShortcutManager!
     
     lazy var statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     let menu = ApplicationMenu()
-    
-    var panelController: PanelController!
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.instance = self
@@ -42,11 +40,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         
         statusBarItem.menu?.delegate = self
 
-        panelController = PanelController()
+        windowSwitcher = WindowSwitcherController()
+        shortcutManager = ShortcutManager(switcher: windowSwitcher)
 
-        KeyboardShortcuts.onKeyDown(for: .switcher) { [weak self] in
-            self?.panelController.handleSwitcherHotkey()
-        }
     }
 
 
