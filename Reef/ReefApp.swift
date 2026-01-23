@@ -30,6 +30,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     lazy var statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     let menu = ApplicationMenu()
     
+    var panelController: PanelController!
+    
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.instance = self
         
@@ -39,14 +41,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusBarItem.menu = menu.createMenu()
         
         statusBarItem.menu?.delegate = self
+
+        panelController = PanelController()
+
+        KeyboardShortcuts.onKeyDown(for: .switcher) { [weak self] in
+            self?.panelController.handleSwitcherHotkey()
+        }
     }
-    
-    
+
+
     @objc func focusWindowFromMenu(sender: NSMenuItem) {
         ConfigManager.config.bindings[sender.tag]?.focus()
     }
-    
-    
+
     func menuWillOpen(_ menu: NSMenu) {
         menu.removeAllItems()
         print("Test")
@@ -66,7 +73,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             }
         }
     }
-    
+
+
 }
-
-
