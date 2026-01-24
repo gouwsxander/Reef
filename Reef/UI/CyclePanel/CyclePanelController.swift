@@ -1,5 +1,5 @@
 //
-//  WindowSwitcherController.swift
+//  CyclePanelController.swift
 //  Reef
 //
 //  Created by Xander Gouws on 23-01-2026.
@@ -8,10 +8,11 @@
 import AppKit
 import SwiftUI
 
+
 @MainActor
-final class WindowSwitcherController: NSObject {
-    private(set) var panel: Panel!
-    private let state = WindowCycleState()
+final class CyclePanelController: NSObject {
+    private(set) var panel: CyclePanel!
+    private let state = CyclePanelState()
     private var flagsMonitor: Any?
     private var currentApplication: Application?
     
@@ -22,9 +23,9 @@ final class WindowSwitcherController: NSObject {
     
     private func createPanel() {
         let contentRect = NSRect(x: 0, y: 0, width: 400, height: 300)
-        panel = Panel(contentRect: contentRect)
+        panel = CyclePanel(contentRect: contentRect)
         
-        let contentView = WindowSwitcherPanel(state: state)
+        let contentView = CyclePanelView(state: state)
         let hostingView = NSHostingView(rootView: contentView)
         hostingView.translatesAutoresizingMaskIntoConstraints = false
         

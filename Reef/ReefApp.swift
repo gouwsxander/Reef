@@ -10,65 +10,42 @@ import KeyboardShortcuts
 
 @main
 struct ReefApp: App {
-    
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     var body: some Scene {
         Settings {
-            //Text("Trying something!")
             EmptyView()
         }
     }
-    
 }
 
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     static private(set) var instance: AppDelegate!
-    private var windowSwitcher: WindowSwitcherController!
-    @State private var shortcutManager: ShortcutManager!
+    
+    private var bindings: Bindings!
+    private var menuController: MenuController!
+    private var cycleController: CyclePanelController!
+    @State private var shortcutManager: ShortcutController!
     
     lazy var statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-    let menu = ApplicationMenu()
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.instance = self
         
+        bindings = Bindings("Default")
+        menuController = MenuController(bindings)
+        cycleController = CyclePanelController()
+        shortcutManager = ShortcutController(cycleController, bindings)
+        
         // Create status bar
         statusBarItem.button?.image = NSImage(systemSymbolName: "fish.fill", accessibilityDescription: "Reef menu")
         statusBarItem.button?.imagePosition = .imageLeading
-        statusBarItem.menu = menu.createMenu()
         
+        statusBarItem.menu = menuController.menu
         statusBarItem.menu?.delegate = self
-
-        windowSwitcher = WindowSwitcherController()
-        shortcutManager = ShortcutManager(switcher: windowSwitcher)
-
-    }
-
-
-    @objc func focusWindowFromMenu(sender: NSMenuItem) {
-        ConfigManager.config.bindings[sender.tag]?.focus()
     }
 
     func menuWillOpen(_ menu: NSMenu) {
-        menu.removeAllItems()
-        print("Test")
-        for i in 0...9 {
-            let number = (10 - i) % 10
-            if let binding = ConfigManager.config.bindings[number] {
-                let menuItem = NSMenuItem(
-                    title: "\(number) | \(binding.title)",
-                    action: #selector(focusWindowFromMenu),
-                    keyEquivalent: String(number)
-                )
-                
-                menuItem.tag = number
-                menuItem.representedObject = binding
-                
-                menu.addItem(menuItem)
-            }
-        }
+        self.menuController.updateMenu()
     }
-
-
 }

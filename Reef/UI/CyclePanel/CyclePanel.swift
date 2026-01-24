@@ -1,5 +1,5 @@
 //
-//  Panel.swift
+//  CyclePanel.swift
 //  Reef
 //
 //  Created by Xander Gouws on 19-01-2026.
@@ -8,7 +8,8 @@
 import AppKit
 import SwiftUI
 
-final class Panel: NSPanel, NSWindowDelegate {
+
+final class CyclePanel: NSPanel, NSWindowDelegate {
     init(contentRect: NSRect) {
         super.init(
             contentRect: contentRect,

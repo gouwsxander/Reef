@@ -1,5 +1,5 @@
 //
-//  WindowSwitcherPanel.swift
+//  CyclePanelView.swift
 //  Reef
 //
 //  Window switcher panel UI
@@ -7,24 +7,17 @@
 
 import SwiftUI
 
-struct WindowSwitcherPanel: View {
-    @ObservedObject var state: WindowCycleState
+struct CyclePanelView: View {
+    @ObservedObject var state: CyclePanelState
     
     var body: some View {
         VStack(spacing: 0) {
             // Header
-            HStack {
-                Text(state.applicationTitle)
-                    .font(.headline)
-                    .foregroundColor(.white)
-                Spacer()
-                Text("\(state.selectedIndex + 1)/\(state.windows.count)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
-            .padding(.bottom, 10)
+            Text(state.applicationTitle)
+                .font(.headline)
+                .foregroundColor(.white)
+                .padding(.top, -12)
+                .padding(.bottom, 12)
             
             Divider()
                 .background(Color.white.opacity(0.2))
@@ -34,7 +27,7 @@ struct WindowSwitcherPanel: View {
                 ScrollView {
                     VStack(spacing: 4) {
                         ForEach(Array(state.windows.enumerated()), id: \.element.id) { index, window in
-                            WindowRow(
+                            CyclePanelRow(
                                 title: window.title,
                                 isSelected: index == state.selectedIndex
                             )
@@ -50,12 +43,12 @@ struct WindowSwitcherPanel: View {
                 }
             }
         }
-        .frame(width: 400, height: 300)
+        .frame(width: 400)
         .background(Color.clear)
     }
 }
 
-struct WindowRow: View {
+struct CyclePanelRow: View {
     let title: String
     let isSelected: Bool
     

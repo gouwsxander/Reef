@@ -9,7 +9,7 @@ import Foundation
 import Cocoa
 
 
-class Application {
+class Application: Hashable {
     var title: String
     var element: AXUIElement
 
@@ -76,6 +76,14 @@ class Application {
             configuration: configuration,
             completionHandler: completionHandler
         )
+    }
+    
+    static func == (lhs: Application, rhs: Application) -> Bool {
+        return lhs.bundleUrl == rhs.bundleUrl && lhs.title == rhs.title
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(self.bundleUrl)
     }
         
     static func getFrontApplication() -> Application? {

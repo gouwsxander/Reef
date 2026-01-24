@@ -1,5 +1,5 @@
 //
-//  WindowCycleState.swift
+//  CyclePanelState.swift
 //  Reef
 //
 //  Created by Xander Gouws on 23-01-2026.
@@ -7,8 +7,9 @@
 
 import Foundation
 
+
 @MainActor
-final class WindowCycleState: ObservableObject {
+final class CyclePanelState: ObservableObject {
     @Published var applicationTitle: String = ""
     @Published var windows: [Window] = []
     @Published var selectedIndex: Int = 0
