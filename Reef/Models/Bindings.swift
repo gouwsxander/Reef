@@ -10,11 +10,11 @@ import Cocoa
 import SwiftData
 
 
-class Bindings {
+class Bindings: ObservableObject {
     @Attribute(.unique) var name: String
     var lastUsedDate: Date?
     
-    private var applications: [Application?]
+    @Published private var applications: [Application?]
     private var indices: [Application: Int]
 
     init(_ name: String) {
