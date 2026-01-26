@@ -14,24 +14,25 @@ struct ReefApp: App {
     @StateObject private var bindings = Bindings("Default")
 
     var body: some Scene {
-        Settings {
-            PreferencesView()
-                .frame(minWidth: 500, minHeight: 200)
-        }
-        .windowStyle(.hiddenTitleBar)
-        .windowResizability(.contentSize)
-        .defaultSize(width: 500, height: 200)
-        
         MenuBarExtra {
             MenuBarContent(bindings: bindings)
         } label: {
             Image(systemName: "fish.fill")
         }
+        
+        SwiftUI.Window("Preferences", id: "preferences") {
+            PreferencesView()
+                .frame(minWidth: 500, minHeight: 400)
+        }
+        .windowResizability(.contentSize)
+        .defaultPosition(.center)
+        .windowStyle(.hiddenTitleBar)
     }
 }
 
 struct MenuBarContent: View {
     @ObservedObject var bindings: Bindings
+    @Environment(\.openWindow) private var openWindow
     
     var body: some View {
         ForEach(Array(stride(from: 9, through: 0, by: -1)), id: \.self) { i in
@@ -45,11 +46,9 @@ struct MenuBarContent: View {
         
         Divider()
         
-        SettingsLink {
-            Text("Preferences...")
+        Button("Preferences...") {
+            openWindow(id: "preferences")
         }
-        
-        Divider()
         
         Button("About Reef") {
             NSApp.orderFrontStandardAboutPanel()
