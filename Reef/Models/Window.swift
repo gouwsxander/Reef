@@ -9,7 +9,8 @@ import Foundation
 import Cocoa
 
 
-class Window {
+class Window: Identifiable {
+    var id: CGWindowID { cgWindowID ?? 0 }
     var element: AXUIElement
     var cgWindowID: CGWindowID?
     var application: Application
@@ -20,14 +21,6 @@ class Window {
         self.application = application
     }
     
-//    public func encode(to encoder: any Encoder) throws {
-//        <#code#>
-//    }
-//    
-//    public required init(from decoder: any Decoder) throws {
-//        <#code#>
-//    }
-    
     var title: String {
         if let title: String = self.element.getAttributeValue(.title) {
             return title
@@ -37,8 +30,6 @@ class Window {
     }
     
     func focus() {
-        
-        print(self.element)
         do {
             try self.element.performAction(.raise)
             self.application.activate()

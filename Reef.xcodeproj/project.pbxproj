@@ -28,7 +28,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		C0A2416C2E7B286000A4B8BF /* SkyLight.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SkyLight.framework; path = ../../../../../System/Library/PrivateFrameworks/SkyLight.framework; sourceTree = "<group>"; };
 		C0DA3E332E74664400F50FB1 /* Reef.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Reef.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0DA3E442E74664500F50FB1 /* ReefTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ReefTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0DA3E4E2E74664500F50FB1 /* ReefUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ReefUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -78,21 +77,12 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		C0A713C52E748746005B3639 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				C0A2416C2E7B286000A4B8BF /* SkyLight.framework */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		C0DA3E2A2E74664400F50FB1 = {
 			isa = PBXGroup;
 			children = (
 				C0DA3E352E74664400F50FB1 /* Reef */,
 				C0DA3E472E74664500F50FB1 /* ReefTests */,
 				C0DA3E512E74664500F50FB1 /* ReefUITests */,
-				C0A713C52E748746005B3639 /* Frameworks */,
 				C0DA3E342E74664400F50FB1 /* Products */,
 			);
 			sourceTree = "<group>";

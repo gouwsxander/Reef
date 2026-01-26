@@ -9,9 +9,7 @@ import Foundation
 import Cocoa
 
 
-// NOTE: This file relies on AXUIElement helpers from logic/ApplicationServices.swift.
-// NOTE: This file also references `Window` from logic/Window.swift.
-class Application {
+class Application: Hashable {
     var title: String
     var element: AXUIElement
 
@@ -30,31 +28,7 @@ class Application {
         self.bundleUrl = runningApplication.bundleURL
     }
     
-//    private enum CodingKeys: String, CodingKey {
-//        case title
-//        case bundleUrl
-//    }
-//    
-//    public func encode(to encoder: any Encoder) throws {
-//        var container = encoder.container(keyedBy: CodingKeys.self)
-//        
-//        try container.encode(title, forKey: .title)
-//        try container.encodeIfPresent(bundleUrl, forKey: .bundleUrl)
-//    }
-//    
-//    public required init(from decoder: any Decoder) throws {
-//        let container = try decoder.container(keyedBy: CodingKeys.self)
-//        
-//        self.title = try container.decode(String.self, forKey: .title)
-//        self.bundleUrl = try container.decodeIfPresent(URL.self, forKey: .bundleUrl)
-//        
-//        
-//    }
-    
-
     func focus() {
-        // Should update to activate with options decided by user
-        // e.g., .activateAllWindows
         self.activate()
     }
 
@@ -103,6 +77,14 @@ class Application {
             completionHandler: completionHandler
         )
     }
+    
+    static func == (lhs: Application, rhs: Application) -> Bool {
+        return lhs.bundleUrl == rhs.bundleUrl && lhs.title == rhs.title
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(self.bundleUrl)
+    }
         
     static func getFrontApplication() -> Application? {
         guard let runningApplication = NSWorkspace.shared.frontmostApplication else {
@@ -127,6 +109,34 @@ class Application {
         
         let configuration = NSWorkspace.OpenConfiguration()
         NSWorkspace.shared.openApplication(at: bundleURL, configuration: configuration) { _, _ in }
+    }
+
+    func getAXWindows() -> [AXUIElement] {
+        // NOTE: Only returns windows in current Desktop (but multiple monitors does work)
+        guard let windows: [AXUIElement] = self.element.getAttributeValue(.windows) else {
+            return []
+        }
+        
+        return windows
+    }
+    
+    func getWindows() -> [Window] {
+        let axWindows = self.getAXWindows()
+        
+        return axWindows.map { axWindow in
+            Window(axWindow, self)
+        }
+    }
+    
+    func listAvailableAttributes() -> [String] {
+        var attributesRef: CFArray?
+        let result = AXUIElementCopyAttributeNames(self.element, &attributesRef)
+        
+        guard result == .success, let attributes = attributesRef as? [String] else {
+            return []
+        }
+        
+        return attributes
     }
 }
 
