@@ -39,6 +39,14 @@ final class MenuController {
         
         menu.addItem(NSMenuItem.separator())
         
+        let preferencesMenuItem = NSMenuItem(
+                title: "Preferences...",
+                action: #selector(openPreferences),
+                keyEquivalent: ""
+            )
+        preferencesMenuItem.target = self
+        menu.addItem(preferencesMenuItem)
+        
         let aboutMenuItem = NSMenuItem(
             title: "About Reef",
             action: #selector(about),
@@ -58,6 +66,10 @@ final class MenuController {
     
     @objc func focusAppFromMenu(sender: NSMenuItem) {
         bindings[sender.tag]?.focus()
+    }
+    
+    @objc func openPreferences(sender: NSMenuItem) {
+        // TODO
     }
 
     @objc func about(sender: NSMenuItem) {
