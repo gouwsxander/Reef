@@ -28,6 +28,13 @@ struct ReefApp: App {
             Image(systemName: "fish.fill")
         }
     }
+    
+    init() {
+        // Initialize AppDelegate with bindings before the app runs
+        let bindings = Bindings("Default")
+        _bindings = StateObject(wrappedValue: bindings)
+        AppDelegate.shared = bindings
+    }
 }
 
 struct MenuBarContent: View {
@@ -49,8 +56,6 @@ struct MenuBarContent: View {
             Text("Preferences...")
         }
         
-        Divider()
-        
         Button("About Reef") {
             NSApp.orderFrontStandardAboutPanel()
         }
@@ -64,27 +69,61 @@ struct MenuBarContent: View {
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     static private(set) var instance: AppDelegate!
+    static var shared: Bindings!
     
     private var cycleController: CyclePanelController!
     private var shortcutManager: ShortcutController!
+    private var windowManager: SettingsWindowManager!
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.instance = self
         
-        let bindings = Bindings("Default")
         cycleController = CyclePanelController()
-        shortcutManager = ShortcutController(cycleController, bindings)
+        shortcutManager = ShortcutController(cycleController, AppDelegate.shared)
+        windowManager = SettingsWindowManager()
         
-        // Make settings visible anywhere?
+        NSApp.setActivationPolicy(.accessory)
+    }
+}
+
+// MARK: - Settings Window Manager
+
+@MainActor
+class SettingsWindowManager {
+    init() {
+        setupWindowObserver()
+    }
+    
+    private func setupWindowObserver() {
         NotificationCenter.default.addObserver(
             forName: NSWindow.didBecomeKeyNotification,
             object: nil,
             queue: .main
         ) { notification in
-            if let window = notification.object as? NSWindow,
-               String(describing: type(of: window)).contains("Settings") {
-                window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+            Task { @MainActor in
+                guard let window = notification.object as? NSWindow else { return }
+                
+                if self.isSettingsWindow(window) {
+                    self.configureSettingsWindow(window)
+                }
             }
         }
+    }
+    
+    private func isSettingsWindow(_ window: NSWindow) -> Bool {
+        let windowClass = String(describing: type(of: window))
+        return windowClass.contains("AppKitWindow") && window.title == "General"
+    }
+    
+    private func configureSettingsWindow(_ window: NSWindow) {
+        // Allow window to appear on all spaces
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        
+        // Float above other windows
+        window.level = .floating
+        
+        // Bring to front
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
     }
 }

@@ -32,12 +32,18 @@ class Bindings: ObservableObject {
 
         applications[index] = application
         indices[application] = index
+        
+        // Trigger UI update
+        objectWillChange.send()
     }
     
     func unbind(_ application: Application) {
         if let index = indices[application] {
             applications[index] = nil
             indices[application] = nil
+            
+            // Trigger UI update
+            objectWillChange.send()
         }
     }
     
