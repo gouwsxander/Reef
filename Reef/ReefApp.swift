@@ -34,8 +34,8 @@ struct MenuBarContent: View {
     @ObservedObject var bindings: Bindings
     
     var body: some View {
-        ForEach(Array(stride(from: 9, through: 0, by: -1)), id: \.self) { i in
-            let number = i
+        ForEach(Array(stride(from: 0, through: 9, by: 1)), id: \.self) { i in
+            let number = (10 - i) % 10
             if let binding = bindings[number] {
                 Button("\(number) | \(binding.title)") {
                     binding.focus()
