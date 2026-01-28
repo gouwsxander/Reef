@@ -63,7 +63,7 @@ struct PreferencesProfilesView: View {
     }
     
     private func addProfile() {
-        let newProfile = Profile(name: "New Profile", numberOrder: "rightHanded", bindings: [:])
+        let newProfile = Profile(name: "New Profile", numberOrder: nil, bindings: [:])
         profiles.append(newProfile)
         selectedProfile = newProfile.id
     }
@@ -87,8 +87,9 @@ struct ProfileDetailView: View {
                 TextField("Profile name:", text: $profile.name)
                 
                 Picker("Number order:", selection: $profile.numberOrder) {
-                    Text("Right handed (0, 9, ..., 1)").tag("rightHanded")
-                    Text("Left handed (1, ..., 9, 0)").tag("leftHanded")
+                    Text("Use default").tag(nil as String?)
+                    Text("Right handed (0, 9, ..., 1)").tag("rightHanded" as String?)
+                    Text("Left handed (1, ..., 9, 0)").tag("leftHanded" as String?)
                 }
                 .pickerStyle(.menu)
             }
@@ -145,6 +146,6 @@ struct ProfileDetailView: View {
 struct Profile: Identifiable, Equatable {
     let id = UUID()
     var name: String
-    var numberOrder: String
+    var numberOrder: String?  // nil means "use default"
     var bindings: [Int: URL]
 }
