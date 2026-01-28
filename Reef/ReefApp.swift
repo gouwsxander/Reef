@@ -16,12 +16,11 @@ struct ReefApp: App {
     var body: some Scene {
         Settings {
             PreferencesView()
-                .frame(minWidth: 500, minHeight: 200)
+                .frame(minWidth: 100)
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
-        .defaultSize(width: 500, height: 200)
-        
+
         MenuBarExtra {
             MenuBarView(bindings: bindings)
         } label: {

@@ -16,7 +16,10 @@ struct PreferencesView: View {
             PreferencesShortcutsView()
                 .tabItem { Label("Shortcuts", systemImage: "keyboard") }
             
+            PreferencesProfilesView()
+                .tabItem { Label("Profiles", systemImage: "person.crop.rectangle.stack") }
         }
+        .frame(width: 600)
     }
 }
 
