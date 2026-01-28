@@ -80,6 +80,7 @@ struct PreferencesProfilesView: View {
 
 struct ProfileDetailView: View {
     @Binding var profile: Profile
+    @AppStorage("defaultNumberOrder") private var defaultNumberOrder = "rightHanded"
     
     var body: some View {
         Form {
@@ -95,7 +96,7 @@ struct ProfileDetailView: View {
             }
             
             Section("Application Bindings") {
-                ForEach(0..<10) { number in
+                ForEach(numbersInOrder, id: \.self) { number in
                     HStack {
                         Text("\(number):")
                             .frame(width: 30, alignment: .leading)
@@ -127,6 +128,16 @@ struct ProfileDetailView: View {
         }
         .formStyle(.grouped)
         .padding()
+    }
+    
+    private var numbersInOrder: [Int] {
+        let effectiveOrder = profile.numberOrder ?? defaultNumberOrder
+        
+        if effectiveOrder == "leftHanded" {
+            return Array(1...9) + [0]
+        } else {
+            return [0] + Array((1...9).reversed())
+        }
     }
     
     private func chooseApplication(for number: Int) {
