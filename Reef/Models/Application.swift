@@ -29,7 +29,17 @@ class Application: Hashable {
     }
     
     func focus() {
-        self.activate()
+        // Centralize relaunch logic here so callers don't need to care
+        // whether the bound application is still running.
+        if self.runningApplication.isTerminated {
+            try? self.reopen()
+            return
+        }
+        
+        // If activation fails (can happen if the process is exiting), relaunch.
+        if !self.runningApplication.activate(options: []) {
+            try? self.reopen()
+        }
     }
 
     func activate(options: NSApplication.ActivationOptions = []) {
@@ -62,6 +72,7 @@ class Application: Hashable {
         }
         
         let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
         
         let completionHandler: (NSRunningApplication?, Error?) -> Void = { runningApplication, error in
             if let runningApplication = runningApplication {
