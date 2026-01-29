@@ -11,6 +11,7 @@ struct CyclePanelView: View {
     @ObservedObject var state: CyclePanelState
 
     private let headerHeight: CGFloat = 44
+    private let maxNonScrollingRows: Int = 5
     
     var body: some View {
         VStack(spacing: 0) {
@@ -28,22 +29,35 @@ struct CyclePanelView: View {
                 .background(Color.white.opacity(0.2))
             
             // Window list
-            ScrollViewReader { proxy in
-                ScrollView {
-                    VStack(spacing: 4) {
-                        ForEach(Array(state.windows.enumerated()), id: \.element.id) { index, window in
-                            CyclePanelRow(
-                                title: window.title,
-                                isSelected: index == state.selectedIndex
-                            )
-                            .id(index)
-                        }
+            if state.windows.count <= maxNonScrollingRows {
+                VStack(spacing: 4) {
+                    ForEach(Array(state.windows.enumerated()), id: \.element.id) { index, window in
+                        CyclePanelRow(
+                            title: window.title,
+                            isSelected: index == state.selectedIndex
+                        )
+                        .id(index)
                     }
-                    .padding(8)
                 }
-                .onChange(of: state.selectedIndex) {
-                    withAnimation(.easeInOut(duration: 0.15)) {
-                        proxy.scrollTo(state.selectedIndex, anchor: .center)
+                .padding(8)
+            } else {
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 4) {
+                            ForEach(Array(state.windows.enumerated()), id: \.element.id) { index, window in
+                                CyclePanelRow(
+                                    title: window.title,
+                                    isSelected: index == state.selectedIndex
+                                )
+                                .id(index)
+                            }
+                        }
+                        .padding(8)
+                    }
+                    .onChange(of: state.selectedIndex) {
+                        withAnimation(.easeInOut(duration: 0.15)) {
+                            proxy.scrollTo(state.selectedIndex, anchor: .center)
+                        }
                     }
                 }
             }
