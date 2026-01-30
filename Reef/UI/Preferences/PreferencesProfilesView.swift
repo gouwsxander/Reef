@@ -54,7 +54,7 @@ struct PreferencesProfilesView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .frame(minHeight: 400)
+        .frame(height: 600)
         .onAppear {
             if selectedProfile == nil {
                 selectedProfile = profiles.first?.id
