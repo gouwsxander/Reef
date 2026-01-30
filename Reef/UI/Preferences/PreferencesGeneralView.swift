@@ -21,13 +21,6 @@ struct PreferencesGeneralView: View {
             }
             
             Section {
-                Picker("Appearance:", selection: $appearance) {
-                    Text("Light").tag("light")
-                    Text("Dark").tag("dark")
-                    Text("System").tag("system")
-                }
-                .pickerStyle(.menu)
-                
                 Picker("Default number order:", selection: $defaultNumberOrder) {
                     Text("Right handed (0, 9, ..., 1)").tag("rightHanded")
                     Text("Left handed (1, ..., 9, 0)").tag("leftHanded")
