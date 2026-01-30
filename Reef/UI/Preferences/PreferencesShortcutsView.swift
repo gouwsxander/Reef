@@ -9,15 +9,12 @@ import SwiftUI
 import KeyboardShortcuts
 
 struct PreferencesShortcutsView: View {
-    @AppStorage("bindControl") private var bindControl = true
-    @AppStorage("bindOption") private var bindOption = false
-    @AppStorage("bindCommand") private var bindCommand = false
-    @AppStorage("bindShift") private var bindShift = false
-    
-    @AppStorage("activateControl") private var activateControl = true
-    @AppStorage("activateOption") private var activateOption = false
-    @AppStorage("activateCommand") private var activateCommand = false
-    @AppStorage("activateShift") private var activateShift = false
+    @StateObject private var modifierManager: ModifierManager = {
+        if let manager = AppDelegate.modifierManager {
+            return manager
+        }
+        return ModifierManager()
+    }()
     
     var body: some View {
         Form {
@@ -38,19 +35,19 @@ struct PreferencesShortcutsView: View {
                     // Bind modifiers row
                     GridRow {
                         Text("Bind modifiers")
-                        Toggle("", isOn: $bindControl).toggleStyle(.checkbox)
-                        Toggle("", isOn: $bindOption).toggleStyle(.checkbox)
-                        Toggle("", isOn: $bindCommand).toggleStyle(.checkbox)
-                        Toggle("", isOn: $bindShift).toggleStyle(.checkbox)
+                        Toggle("", isOn: $modifierManager.bindControl).toggleStyle(.checkbox)
+                        Toggle("", isOn: $modifierManager.bindOption).toggleStyle(.checkbox)
+                        Toggle("", isOn: $modifierManager.bindCommand).toggleStyle(.checkbox)
+                        Toggle("", isOn: $modifierManager.bindShift).toggleStyle(.checkbox)
                     }
                     
                     // Activate modifiers row
                     GridRow {
                         Text("Activate modifiers")
-                        Toggle("", isOn: $activateControl).toggleStyle(.checkbox)
-                        Toggle("", isOn: $activateOption).toggleStyle(.checkbox)
-                        Toggle("", isOn: $activateCommand).toggleStyle(.checkbox)
-                        Toggle("", isOn: $activateShift).toggleStyle(.checkbox)
+                        Toggle("", isOn: $modifierManager.activateControl).toggleStyle(.checkbox)
+                        Toggle("", isOn: $modifierManager.activateOption).toggleStyle(.checkbox)
+                        Toggle("", isOn: $modifierManager.activateCommand).toggleStyle(.checkbox)
+                        Toggle("", isOn: $modifierManager.activateShift).toggleStyle(.checkbox)
                     }
                 }
                 .padding(.vertical, 8)

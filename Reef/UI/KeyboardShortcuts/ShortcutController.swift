@@ -5,27 +5,23 @@
 //  Created by Xander Gouws on 12-09-2025.
 //
 
-
 import KeyboardShortcuts
 import Cocoa
-
 
 let numberKeys: [KeyboardShortcuts.Key] = [
     .zero, .one, .two, .three, .four,
     .five, .six, .seven, .eight, .nine
 ]
 
-
 extension KeyboardShortcuts.Name {
     static let bindShortcuts: [KeyboardShortcuts.Name] = (0...9).map { number in
-        Self("bind\(number)", default: .init(numberKeys[number], modifiers: [.control, .option]))
+        Self("bind\(number)")
     }
     
     static let activateShortcuts: [KeyboardShortcuts.Name] = (0...9).map { number in
-        Self("activate\(number)", default: .init(numberKeys[number], modifiers: [.control]))
+        Self("activate\(number)")
     }
 }
-
 
 @MainActor
 final class ShortcutController {
@@ -35,6 +31,7 @@ final class ShortcutController {
     init(_ cycleController: CyclePanelController, _ bindings: Bindings) {
         self.cycleController = cycleController
         self.bindings = bindings
+        
         setupShortcuts()
     }
     

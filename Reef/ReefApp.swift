@@ -41,6 +41,7 @@ struct ReefApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     static private(set) var instance: AppDelegate!
     static var shared: Bindings!
+    static private(set) var modifierManager: ModifierManager!
     
     private var cycleController: CyclePanelController!
     private var shortcutManager: ShortcutController!
@@ -49,6 +50,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.instance = self
         
+        AppDelegate.modifierManager = ModifierManager()
+        
         cycleController = CyclePanelController()
         shortcutManager = ShortcutController(cycleController, AppDelegate.shared)
         windowManager = PreferencesController()
@@ -56,4 +59,3 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.accessory)
     }
 }
-

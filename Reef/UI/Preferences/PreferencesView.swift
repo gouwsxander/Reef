@@ -13,11 +13,11 @@ struct PreferencesView: View {
             PreferencesGeneralView()
                 .tabItem { Label("General", systemImage: "gear")}
             
-            PreferencesShortcutsView()
-                .tabItem { Label("Shortcuts", systemImage: "keyboard") }
-            
             PreferencesProfilesView()
                 .tabItem { Label("Profiles", systemImage: "person.crop.rectangle.stack") }
+            
+            PreferencesShortcutsView()
+                .tabItem { Label("Shortcuts", systemImage: "command") }
         }
         .frame(width: 600)
     }
