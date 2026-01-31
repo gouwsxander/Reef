@@ -13,7 +13,7 @@ final class CyclePanel: NSPanel, NSWindowDelegate {
     init(contentRect: NSRect) {
         super.init(
             contentRect: contentRect,
-            styleMask: [.borderless, .nonactivatingPanel],
+            styleMask: [.fullSizeContentView, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )

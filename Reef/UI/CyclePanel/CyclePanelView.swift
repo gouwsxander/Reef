@@ -10,20 +10,18 @@ import SwiftUI
 struct CyclePanelView: View {
     @ObservedObject var state: CyclePanelState
 
-    private let headerHeight: CGFloat = 44
+    private let headerPadding: Double = 12
     private let maxNonScrollingRows: Int = 5
     
     var body: some View {
         VStack(spacing: 0) {
             // Header
-            ZStack(alignment: .top) {
-                Text(state.applicationTitle)
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .lineLimit(1)
-                    //.padding(.horizontal, 12)
-            }
-            .frame(height: headerHeight, alignment: .center)
+            Text(state.applicationTitle)
+                .font(.headline)
+                .foregroundColor(.white)
+                .lineLimit(1)
+                .padding(.vertical, headerPadding)
+
             
             Divider()
                 .background(Color.white.opacity(0.2))
@@ -79,6 +77,9 @@ struct CyclePanelRow: View {
             Circle()
                 .fill(isSelected ? Color.accentColor : Color.clear)
                 .frame(width: 6, height: 6)
+//            Image(systemName: "fish.fill")
+//                .opacity(isSelected ? 1.0 : 0.0)
+//                .frame(width: 6, height: 6)
             
             Text(title)
                 .foregroundColor(isSelected ? .white : .primary)
@@ -92,6 +93,7 @@ struct CyclePanelRow: View {
         .background(
             RoundedRectangle(cornerRadius: 6)
                 .fill(isSelected ? Color.accentColor.opacity(0.3) : Color.clear)
+            
         )
     }
 }
