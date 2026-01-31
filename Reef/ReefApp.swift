@@ -37,7 +37,8 @@ struct ReefApp: App {
         .windowResizability(.contentSize)
 
         MenuBarExtra {
-            MenuBarView(bindings: profileManager.currentProfile)
+            MenuBarView()
+                .modelContainer(modelContainer)
                 .environmentObject(profileManager)
         } label: {
             Image(systemName: "fish.fill")
