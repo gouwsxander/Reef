@@ -13,7 +13,7 @@ final class CyclePanel: NSPanel, NSWindowDelegate {
     init(contentRect: NSRect) {
         super.init(
             contentRect: contentRect,
-            styleMask: [.titled, .fullSizeContentView, .nonactivatingPanel],
+            styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
@@ -38,6 +38,11 @@ final class CyclePanel: NSPanel, NSWindowDelegate {
         effectView.blendingMode = .behindWindow
         effectView.state = .active
         effectView.appearance = NSAppearance(named: .vibrantDark)
+
+        effectView.wantsLayer = true
+        effectView.layer?.cornerRadius = 12
+        effectView.layer?.cornerCurve = .continuous
+        effectView.layer?.masksToBounds = true
 
         // Dark tint layer to keep the panel dark even in Light Mode.
         let tintView = NSView(frame: .zero)

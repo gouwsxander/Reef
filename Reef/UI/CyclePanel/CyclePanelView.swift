@@ -21,9 +21,9 @@ struct CyclePanelView: View {
                     .font(.headline)
                     .foregroundColor(.white)
                     .lineLimit(1)
-                    .padding(.horizontal, 12)
+                    //.padding(.horizontal, 12)
             }
-            .frame(height: headerHeight, alignment: .top)
+            .frame(height: headerHeight, alignment: .center)
             
             Divider()
                 .background(Color.white.opacity(0.2))
