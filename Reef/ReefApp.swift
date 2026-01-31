@@ -7,40 +7,48 @@
 
 import SwiftUI
 import KeyboardShortcuts
+import SwiftData
 
 @main
 struct ReefApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @StateObject private var bindings = Bindings("Default")
+    @StateObject private var profileManager: ProfileManager
+    
+    let modelContainer: ModelContainer
+    
+    init() {
+        do {
+            modelContainer = try ModelContainer(for: Bindings.self)
+            let profileManager = ProfileManager(modelContext: modelContainer.mainContext)
+            _profileManager = StateObject(wrappedValue: profileManager)
+            AppDelegate.profileManager = profileManager
+        } catch {
+            fatalError("Failed to create ModelContainer: \(error)")
+        }
+    }
 
     var body: some Scene {
         Settings {
             PreferencesView()
-                .frame(minWidth: 100)
+                .modelContainer(modelContainer)
+                .environmentObject(profileManager)
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
 
         MenuBarExtra {
-            MenuBarView(bindings: bindings)
+            MenuBarView(bindings: profileManager.currentProfile)
+                .environmentObject(profileManager)
         } label: {
             Image(systemName: "fish.fill")
         }
     }
-    
-    init() {
-        // Initialize AppDelegate with bindings before the app runs
-        let bindings = Bindings("Default")
-        _bindings = StateObject(wrappedValue: bindings)
-        AppDelegate.shared = bindings
-    }
 }
-
 
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     static private(set) var instance: AppDelegate!
-    static var shared: Bindings!
+    static var profileManager: ProfileManager!
     static private(set) var modifierManager: ModifierManager!
     
     private var cycleController: CyclePanelController!
@@ -49,11 +57,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.instance = self
-        
         AppDelegate.modifierManager = ModifierManager()
         
         cycleController = CyclePanelController()
-        shortcutManager = ShortcutController(cycleController, AppDelegate.shared)
+        shortcutManager = ShortcutController(cycleController, AppDelegate.profileManager)
         windowManager = PreferencesController()
         
         NSApp.setActivationPolicy(.accessory)

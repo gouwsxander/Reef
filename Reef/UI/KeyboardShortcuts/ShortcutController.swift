@@ -26,11 +26,11 @@ extension KeyboardShortcuts.Name {
 @MainActor
 final class ShortcutController {
     private let cycleController: CyclePanelController
-    private let bindings: Bindings
+    private let profileManager: ProfileManager
     
-    init(_ cycleController: CyclePanelController, _ bindings: Bindings) {
+    init(_ cycleController: CyclePanelController, _ profileManager: ProfileManager) {
         self.cycleController = cycleController
-        self.bindings = bindings
+        self.profileManager = profileManager
         
         setupShortcuts()
     }
@@ -53,13 +53,13 @@ final class ShortcutController {
             return
         }
         
-        bindings.bind(application, number)
+        profileManager.currentProfile.bind(application, number)
         
         print("Bound \(application.title) to \(number)")
     }
     
     private func handleActivate(number: Int) {
-        guard let binding = bindings[number] else {
+        guard let binding = profileManager.currentProfile[number] else {
             NSSound.beep()
             return
         }

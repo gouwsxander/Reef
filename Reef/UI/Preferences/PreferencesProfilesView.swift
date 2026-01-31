@@ -6,20 +6,25 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct PreferencesProfilesView: View {
-    @State private var profiles: [Profile] = [
-        Profile(name: "Default", numberOrder: "rightHanded", bindings: [:])
-    ]
-    @State private var selectedProfile: Profile.ID?
+    @EnvironmentObject var profileManager: ProfileManager
+    @Query(sort: \Bindings.createdDate, order: .forward) var profiles: [Bindings]
+    @State private var selectedProfileID: PersistentIdentifier?
     
     var body: some View {
         HStack(spacing: 0) {
-            // Left panel - Profile list
             VStack(spacing: 0) {
-                List(profiles, selection: $selectedProfile) { profile in
+                List(profiles, id: \.persistentModelID, selection: $selectedProfileID) { profile in
                     Text(profile.name)
-                        .tag(profile.id)
+                        .tag(profile.persistentModelID)
+                }
+                .onChange(of: selectedProfileID) { _, newID in
+                    if let newID = newID,
+                       let profile = profiles.first(where: { $0.persistentModelID == newID }) {
+                        profileManager.switchProfile(profile)
+                    }
                 }
                 
                 Divider()
@@ -27,14 +32,16 @@ struct PreferencesProfilesView: View {
                 HStack {
                     Button(action: addProfile) {
                         Image(systemName: "plus")
+                            .frame(width: 20, height:20)
                     }
                     .buttonStyle(.borderless)
                     
                     Button(action: removeProfile) {
                         Image(systemName: "minus")
+                            .frame(width: 20, height:20)
                     }
                     .buttonStyle(.borderless)
-                    .disabled(profiles.count <= 1 || selectedProfile == nil)
+                    .disabled(profiles.count <= 1 || selectedProfileID == nil)
                     
                     Spacer()
                 }
@@ -44,10 +51,12 @@ struct PreferencesProfilesView: View {
             
             Divider()
             
-            // Right panel - Profile details
-            if let selectedProfile = selectedProfile,
-               let profileIndex = profiles.firstIndex(where: { $0.id == selectedProfile }) {
-                ProfileDetailView(profile: $profiles[profileIndex])
+            if let selectedProfileID = selectedProfileID,
+               let selectedProfile = profiles.first(where: { $0.persistentModelID == selectedProfileID }) {
+                ProfileDetailView(
+                    profile: selectedProfile,
+                    profileManager: profileManager
+                )
             } else {
                 Text("Select a profile")
                     .foregroundStyle(.secondary)
@@ -56,36 +65,51 @@ struct PreferencesProfilesView: View {
         }
         .frame(height: 575)
         .onAppear {
-            if selectedProfile == nil {
-                selectedProfile = profiles.first?.id
+            if selectedProfileID == nil {
+                selectedProfileID = profileManager.currentProfile.persistentModelID
             }
         }
     }
     
     private func addProfile() {
-        let newProfile = Profile(name: "New Profile", numberOrder: nil, bindings: [:])
-        profiles.append(newProfile)
-        selectedProfile = newProfile.id
+        let newProfile = profileManager.createProfile(name: "New Profile")
+        selectedProfileID = newProfile.persistentModelID
     }
     
     private func removeProfile() {
-        guard let selectedProfile = selectedProfile,
-              let index = profiles.firstIndex(where: { $0.id == selectedProfile }) else {
+        guard profiles.count > 1,
+              let selectedID = selectedProfileID,
+              let selectedIndex = profiles.firstIndex(where: { $0.persistentModelID == selectedID }) else {
             return
         }
-        profiles.remove(at: index)
-        self.selectedProfile = profiles.first?.id
+        
+        let selectedProfile = profiles[selectedIndex]
+        
+        // Pick the next profile below, or fall back to the one above
+        let nextIndex = selectedIndex + 1 < profiles.count ? selectedIndex + 1 : selectedIndex - 1
+        let nextProfile = profiles[nextIndex]
+        
+        if selectedProfile.persistentModelID == profileManager.currentProfile.persistentModelID {
+            profileManager.switchProfile(nextProfile)
+        }
+        
+        profileManager.deleteProfile(selectedProfile)
+        selectedProfileID = nextProfile.persistentModelID
     }
 }
 
 struct ProfileDetailView: View {
-    @Binding var profile: Profile
+    @ObservedObject var profile: Bindings
+    @ObservedObject var profileManager: ProfileManager
     @AppStorage("defaultNumberOrder") private var defaultNumberOrder = "rightHanded"
     
     var body: some View {
         Form {
             Section {
                 TextField("Profile name:", text: $profile.name)
+                    .onChange(of: profile.name) { _, _ in
+                        try? profileManager.modelContext.save()
+                    }
                 
                 Picker("Number order:", selection: $profile.numberOrder) {
                     Text("Use default").tag(nil as String?)
@@ -93,6 +117,9 @@ struct ProfileDetailView: View {
                     Text("Left handed (1, ..., 9, 0)").tag("leftHanded" as String?)
                 }
                 .pickerStyle(.menu)
+                .onChange(of: profile.numberOrder) { _, _ in
+                    try? profileManager.modelContext.save()
+                }
             }
             
             Section("Application Bindings") {
@@ -101,14 +128,16 @@ struct ProfileDetailView: View {
                         Text("\(number):")
                             .frame(width: 30, alignment: .leading)
                         
-                        if let appURL = profile.bindings[number] {
-                            Text(appURL.deletingPathExtension().lastPathComponent)
+                        if let app = profile[number],
+                           let bundleUrl = app.bundleUrl {
+                            Text(bundleUrl.deletingPathExtension().lastPathComponent)
                                 .foregroundStyle(.secondary)
                             
                             Spacer()
                             
                             Button("Remove") {
-                                profile.bindings[number] = nil
+                                profile.unbind(app)
+                                try? profileManager.modelContext.save()
                             }
                             .buttonStyle(.borderless)
                         } else {
@@ -149,7 +178,10 @@ struct ProfileDetailView: View {
         panel.directoryURL = URL(fileURLWithPath: "/Applications")
         
         if panel.runModal() == .OK, let url = panel.url {
-            profile.bindings[number] = url
+            if let app = Application(url: url) {
+                profile.bind(app, number)
+                try? profileManager.modelContext.save()
+            }
         }
     }
 }
