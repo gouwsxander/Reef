@@ -91,6 +91,24 @@ final class ModifierManager: ObservableObject {
         return modifiers
     }
     
+    var activateEventModifiers: EventModifiers {
+        var modifiers: EventModifiers = []
+        if activateControl { modifiers.insert(.control) }
+        if activateOption { modifiers.insert(.option) }
+        if activateCommand { modifiers.insert(.command) }
+        if activateShift { modifiers.insert(.shift) }
+        return modifiers
+    }
+    
+    var profileEventModifiers: EventModifiers {
+        var modifiers: EventModifiers = []
+        if profileControl { modifiers.insert(.control) }
+        if profileOption { modifiers.insert(.option) }
+        if profileCommand { modifiers.insert(.command) }
+        if profileShift { modifiers.insert(.shift) }
+        return modifiers
+    }
+    
     var profileModifierSymbols: String {
         var symbols = ""
         if profileControl  { symbols += "⌃ " }

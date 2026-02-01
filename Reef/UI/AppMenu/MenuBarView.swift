@@ -14,11 +14,26 @@ struct MenuBarView: View {
     
     @Environment(\.openSettings) private var openSettings
     
+    @StateObject private var modifierManager: ModifierManager = {
+        if let manager = AppDelegate.modifierManager {
+            return manager
+        }
+        return ModifierManager()
+    }()
+
+    
     var body: some View {
         // Profiles
         ForEach(profiles) { profile in
-            Button(profile.name) {
-                profileManager.switchProfile(profile)
+            if modifierManager.profileEnabled, let profileNumber = profile.profileNumber {
+                Button(profile.name) {
+                    profileManager.switchProfile(profile)
+                }
+                .keyboardShortcut(KeyEquivalent(Character("\(profileNumber)")), modifiers: modifierManager.profileEventModifiers)
+            } else {
+                Button(profile.name) {
+                    profileManager.switchProfile(profile)
+                }
             }
         }
         
@@ -28,10 +43,16 @@ struct MenuBarView: View {
         ForEach(Array(stride(from: 0, through: 9, by: 1)), id: \.self) { i in
             let number = (10 - i) % 10
             if let binding = profileManager.currentProfile[number] {
-                Button("\(number) | \(binding.title)") {
-                    binding.focus()
+                if modifierManager.activateEnabled {
+                    Button("\(binding.title)") {
+                        binding.focus()
+                    }
+                    .keyboardShortcut(KeyEquivalent(Character("\(number)")), modifiers: modifierManager.activateEventModifiers)
+                } else {
+                    Button("\(binding.title)") {
+                        binding.focus()
+                    }
                 }
-//                .keyboardShortcut(KeyEquivalent(Character("\(number)")), modifiers: [])
             }
         }
         
