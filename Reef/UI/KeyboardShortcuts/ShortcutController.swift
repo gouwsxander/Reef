@@ -21,6 +21,10 @@ extension KeyboardShortcuts.Name {
     static let activateShortcuts: [KeyboardShortcuts.Name] = (0...9).map { number in
         Self("activate\(number)")
     }
+    
+    static let profileShortcuts: [KeyboardShortcuts.Name] = (0...9).map { number in
+        Self("profile\(number)")
+    }
 }
 
 @MainActor
@@ -43,6 +47,10 @@ final class ShortcutController {
             
             KeyboardShortcuts.onKeyDown(for: .activateShortcuts[number]) {
                 self.handleActivate(number: number)
+            }
+            
+            KeyboardShortcuts.onKeyDown(for: .profileShortcuts[number]) {
+                self.handleProfile(number: number)
             }
         }
     }
@@ -79,5 +87,14 @@ final class ShortcutController {
         }
         
         cycleController.showSwitcher(for: binding, startIndex: startIndex)
+    }
+    
+    func handleProfile(number: Int) {
+        guard let profile = profileManager.profilesByNumber[number] else {
+            NSSound.beep()
+            return
+        }
+        
+        profileManager.switchProfile(profile)
     }
 }

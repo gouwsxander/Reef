@@ -15,7 +15,8 @@ class Bindings: ObservableObject {
     var createdDate: Date?
     var lastUsedDate: Date?
     var numberOrder: String? // nil means "use default"
-    
+    var profileNumber: Int?
+
     // Store bindings as URLs for persistence (SwiftData compatible)
     var bindingURLs: [Int: URL]
     

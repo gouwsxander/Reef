@@ -36,6 +36,19 @@ final class ModifierManager: ObservableObject {
         didSet { updateShortcuts() }
     }
     
+    @AppStorage("profileControl") var profileControl = true {
+        didSet { updateShortcuts() }
+    }
+    @AppStorage("profileOption") var profileOption = true {
+        didSet { updateShortcuts() }
+    }
+    @AppStorage("profileCommand") var profileCommand = false {
+        didSet { updateShortcuts() }
+    }
+    @AppStorage("profileShift") var profileShift = true {
+        didSet { updateShortcuts() }
+    }
+    
     init() {
         // Initialize shortcuts with saved modifiers on first launch
         updateShortcuts()
@@ -59,9 +72,28 @@ final class ModifierManager: ObservableObject {
         return modifiers
     }
     
+    var profileModifiers: NSEvent.ModifierFlags {
+        var modifiers: NSEvent.ModifierFlags = []
+        if profileControl { modifiers.insert(.control) }
+        if profileOption { modifiers.insert(.option) }
+        if profileCommand { modifiers.insert(.command) }
+        if profileShift { modifiers.insert(.shift) }
+        return modifiers
+    }
+    
+    var profileModifierSymbols: String {
+        var symbols = ""
+        if profileControl  { symbols += "⌃ " }
+        if profileOption   { symbols += "⌥ " }
+        if profileShift    { symbols += "⇧ " }
+        if profileCommand  { symbols += "⌘ " }
+        return symbols
+    }
+    
     private func updateShortcuts() {
         let bindMods = bindModifiers
         let activateMods = activateModifiers
+        let profileMods = profileModifiers
         
         for number in 0...9 {
             // Update bind shortcuts
@@ -74,6 +106,12 @@ final class ModifierManager: ObservableObject {
             KeyboardShortcuts.setShortcut(
                 .init(numberKeys[number], modifiers: activateMods),
                 for: .activateShortcuts[number]
+            )
+            
+            // Update profile shortcuts
+            KeyboardShortcuts.setShortcut(
+                .init(numberKeys[number], modifiers: profileMods),
+                for: .profileShortcuts[number]
             )
         }
     }

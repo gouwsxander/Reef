@@ -10,6 +10,12 @@ import SwiftData
 
 struct PreferencesProfilesView: View {
     @EnvironmentObject var profileManager: ProfileManager
+    @StateObject private var modifierManager: ModifierManager = {
+        if let manager = AppDelegate.modifierManager {
+            return manager
+        }
+        return ModifierManager()
+    }()
     @Query(sort: \Bindings.createdDate, order: .forward) var profiles: [Bindings]
     @State private var selectedProfileID: PersistentIdentifier?
     
@@ -17,8 +23,19 @@ struct PreferencesProfilesView: View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
                 List(profiles, id: \.persistentModelID, selection: $selectedProfileID) { profile in
-                    Text(profile.name)
-                        .tag(profile.persistentModelID)
+                    HStack {
+                        Text(profile.name)
+
+                        if let number = profile.profileNumber {
+                            Spacer()
+                            
+                            Text("\(modifierManager.profileModifierSymbols)\(number)")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                                .frame(minWidth: 40, alignment: .trailing)
+                        }
+                    }
+                    .tag(profile.persistentModelID)
                 }
                 .onChange(of: selectedProfileID) { _, newID in
                     if let newID = newID,
@@ -47,7 +64,7 @@ struct PreferencesProfilesView: View {
                 }
                 .padding(8)
             }
-            .frame(width: 150)
+            .frame(width: 200)
             
             Divider()
             
@@ -55,7 +72,8 @@ struct PreferencesProfilesView: View {
                let selectedProfile = profiles.first(where: { $0.persistentModelID == selectedProfileID }) {
                 ProfileDetailView(
                     profile: selectedProfile,
-                    profileManager: profileManager
+                    profileManager: profileManager,
+                    modifierManager: modifierManager
                 )
             } else {
                 Text("Select a profile")
@@ -101,7 +119,9 @@ struct PreferencesProfilesView: View {
 struct ProfileDetailView: View {
     @ObservedObject var profile: Bindings
     @ObservedObject var profileManager: ProfileManager
+    @ObservedObject var modifierManager: ModifierManager
     @AppStorage("defaultNumberOrder") private var defaultNumberOrder = "rightHanded"
+    
     
     var body: some View {
         Form {
@@ -119,6 +139,28 @@ struct ProfileDetailView: View {
                 .pickerStyle(.menu)
                 .onChange(of: profile.numberOrder) { _, _ in
                     try? profileManager.modelContext.save()
+                }
+                
+                Picker("Profile number:", selection: $profile.profileNumber) {
+                    Text("Unnumbered").tag(nil as Int?)
+                    
+                    Divider()
+                    
+                    ForEach(profileManager.availableNumbers(excluding: profile), id: \.self) { number in
+                        Text("\(number)").tag(number as Int?)
+                    }
+                }
+                .pickerStyle(.menu)
+                .onChange(of: profile.profileNumber) { _, _ in
+                    profileManager.setProfileNumber(profile, number: profile.profileNumber)
+                }
+            } footer: {
+                if let number = profile.profileNumber {
+                    Text("\(modifierManager.profileModifierSymbols)\(number)")
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("No shortcut assigned")
+                        .foregroundStyle(.tertiary)
                 }
             }
             
@@ -184,11 +226,4 @@ struct ProfileDetailView: View {
             }
         }
     }
-}
-
-struct Profile: Identifiable, Equatable {
-    let id = UUID()
-    var name: String
-    var numberOrder: String?  // nil means "use default"
-    var bindings: [Int: URL]
 }
