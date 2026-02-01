@@ -80,13 +80,13 @@ class Application: Hashable {
     func focus() {
         // Centralize relaunch logic here so callers don't need to care
         // whether the bound application is still running.
-        if self.runningApplication.isTerminated {
+        if self.runningApplication?.isTerminated == true {
             try? self.reopen()
             return
         }
         
         // If activation fails (can happen if the process is exiting), relaunch.
-        if !self.runningApplication.activate(options: []) {
+        if self.runningApplication?.activate(options: []) == false {
             try? self.reopen()
         }
     }

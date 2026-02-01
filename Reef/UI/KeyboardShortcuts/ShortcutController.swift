@@ -79,7 +79,7 @@ final class ShortcutController {
         }
 
         // If the bound application was quit/terminated, relaunch it and do not show the cycle panel.
-        if binding.runningApplication.isTerminated {
+        if binding.runningApplication?.isTerminated == true {
             binding.focus()
             return
         }
