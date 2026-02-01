@@ -10,6 +10,9 @@ import KeyboardShortcuts
 
 @MainActor
 final class ModifierManager: ObservableObject {
+    @AppStorage("bindEnabled") var bindEnabled = true {
+        didSet { updateShortcuts() }
+    }
     @AppStorage("bindControl") var bindControl = true {
         didSet { updateShortcuts() }
     }
@@ -23,6 +26,9 @@ final class ModifierManager: ObservableObject {
         didSet { updateShortcuts() }
     }
     
+    @AppStorage("activateEnabled") var activateEnabled = true {
+        didSet { updateShortcuts() }
+    }
     @AppStorage("activateControl") var activateControl = true {
         didSet { updateShortcuts() }
     }
@@ -36,6 +42,9 @@ final class ModifierManager: ObservableObject {
         didSet { updateShortcuts() }
     }
     
+    @AppStorage("profileEnabled") var profileEnabled = true {
+        didSet { updateShortcuts() }
+    }
     @AppStorage("profileControl") var profileControl = true {
         didSet { updateShortcuts() }
     }
@@ -48,6 +57,7 @@ final class ModifierManager: ObservableObject {
     @AppStorage("profileShift") var profileShift = true {
         didSet { updateShortcuts() }
     }
+
     
     init() {
         // Initialize shortcuts with saved modifiers on first launch
@@ -94,23 +104,20 @@ final class ModifierManager: ObservableObject {
         let bindMods = bindModifiers
         let activateMods = activateModifiers
         let profileMods = profileModifiers
-        
+
         for number in 0...9 {
-            // Update bind shortcuts
             KeyboardShortcuts.setShortcut(
-                .init(numberKeys[number], modifiers: bindMods),
+                bindEnabled ? .init(numberKeys[number], modifiers: bindMods) : nil,
                 for: .bindShortcuts[number]
             )
-            
-            // Update activate shortcuts
+
             KeyboardShortcuts.setShortcut(
-                .init(numberKeys[number], modifiers: activateMods),
+                activateEnabled ? .init(numberKeys[number], modifiers: activateMods) : nil,
                 for: .activateShortcuts[number]
             )
-            
-            // Update profile shortcuts
+
             KeyboardShortcuts.setShortcut(
-                .init(numberKeys[number], modifiers: profileMods),
+                profileEnabled ? .init(numberKeys[number], modifiers: profileMods) : nil,
                 for: .profileShortcuts[number]
             )
         }

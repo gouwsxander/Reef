@@ -34,29 +34,39 @@ struct PreferencesShortcutsView: View {
                     
                     // Activate modifiers row
                     GridRow {
-                        Text("Activate modifiers")
-                        Toggle("", isOn: $modifierManager.activateControl).toggleStyle(.checkbox)
-                        Toggle("", isOn: $modifierManager.activateOption).toggleStyle(.checkbox)
-                        Toggle("", isOn: $modifierManager.activateShift).toggleStyle(.checkbox)
-                        Toggle("", isOn: $modifierManager.activateCommand).toggleStyle(.checkbox)
+                        Toggle("Activate modifiers", isOn: $modifierManager.activateEnabled).toggleStyle(.checkbox)
+                        Group {
+                            Toggle("", isOn: $modifierManager.activateControl).toggleStyle(.checkbox)
+                            Toggle("", isOn: $modifierManager.activateOption).toggleStyle(.checkbox)
+                            Toggle("", isOn: $modifierManager.activateShift).toggleStyle(.checkbox)
+                            Toggle("", isOn: $modifierManager.activateCommand).toggleStyle(.checkbox)
+                        }
+                        .disabled(!modifierManager.activateEnabled)
                     }
                     
                     // Profile modifiers row
                     GridRow {
-                        Text("Profile modifiers")
-                        Toggle("", isOn: $modifierManager.profileControl).toggleStyle(.checkbox)
-                        Toggle("", isOn: $modifierManager.profileOption).toggleStyle(.checkbox)
-                        Toggle("", isOn: $modifierManager.profileShift).toggleStyle(.checkbox)
-                        Toggle("", isOn: $modifierManager.profileCommand).toggleStyle(.checkbox)
+                        Toggle("Profile modifiers", isOn: $modifierManager.profileEnabled).toggleStyle(.checkbox)
+                        Group {
+                            Toggle("", isOn: $modifierManager.profileControl).toggleStyle(.checkbox)
+                            Toggle("", isOn: $modifierManager.profileOption).toggleStyle(.checkbox)
+                            Toggle("", isOn: $modifierManager.profileShift).toggleStyle(.checkbox)
+                            Toggle("", isOn: $modifierManager.profileCommand).toggleStyle(.checkbox)
+                        }
+                        .disabled(!modifierManager.profileEnabled)
                     }
 
                     // Bind modifiers row
                     GridRow {
-                        Text("Bind modifiers")
-                        Toggle("", isOn: $modifierManager.bindControl).toggleStyle(.checkbox)
-                        Toggle("", isOn: $modifierManager.bindOption).toggleStyle(.checkbox)
-                        Toggle("", isOn: $modifierManager.bindShift).toggleStyle(.checkbox)
-                        Toggle("", isOn: $modifierManager.bindCommand).toggleStyle(.checkbox)
+                        Toggle("Bind modifiers", isOn: $modifierManager.bindEnabled).toggleStyle(.checkbox)
+                        Group {
+                            Toggle("", isOn: $modifierManager.bindControl).toggleStyle(.checkbox)
+                            Toggle("", isOn: $modifierManager.bindOption).toggleStyle(.checkbox)
+                            Toggle("", isOn: $modifierManager.bindShift).toggleStyle(.checkbox)
+                            Toggle("", isOn: $modifierManager.bindCommand).toggleStyle(.checkbox)
+                        }
+                        .disabled(!modifierManager.bindEnabled)
+                        
                     }
                 }
                 .padding(.vertical, 8)
