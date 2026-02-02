@@ -52,10 +52,10 @@ struct PreferencesGeneralView: View {
                     .onChange(of: launchOnLogin) { _, newValue in
                         setLaunchAtLogin(enabled: newValue)
                     }
+                
 //                Toggle("Hide menubar icon", isOn: $hideMenubarIcon)
-            }
-            
-            Section {
+                
+                
                 Picker("Default number order:", selection: $defaultNumberOrder) {
                     Text("Right handed (0, 9, ..., 1)").tag("rightHanded")
                     Text("Left handed (1, ..., 9, 0)").tag("leftHanded")
