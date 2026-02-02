@@ -146,7 +146,22 @@ struct ProfileDetailView: View {
                     
                     Divider()
                     
-                    ForEach(profileManager.availableNumbers(excluding: profile), id: \.self) { number in
+                    let numberOrder = profile.numberOrder ?? defaultNumberOrder
+                    let sortedNumbers = profileManager.availableNumbers(excluding: profile).sorted { num1, num2 in
+                        if numberOrder == "rightHanded" {
+                            // Right handed: 0, 9, 8, ..., 1
+                            let order1 = num1 == 0 ? 0 : (11 - num1)
+                            let order2 = num2 == 0 ? 0 : (11 - num2)
+                            return order1 < order2
+                        } else {
+                            // Left handed: 1, 2, ..., 9, 0
+                            if num1 == 0 { return false }
+                            if num2 == 0 { return true }
+                            return num1 < num2
+                        }
+                    }
+                    
+                    ForEach(sortedNumbers, id: \.self) { number in
                         Text("\(number)").tag(number as Int?)
                     }
                 }
@@ -157,7 +172,7 @@ struct ProfileDetailView: View {
             } footer: {
                 if let number = profile.profileNumber {
                     Text("\(modifierManager.profileModifierSymbols)\(number)")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.tertiary)
                 } else {
                     Text("No shortcut assigned")
                         .foregroundStyle(.tertiary)
