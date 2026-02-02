@@ -11,10 +11,10 @@ import Cocoa
 
 class Application: Hashable {
     var title: String
-    var element: AXUIElement
+    var element: AXUIElement?
 
-    var runningApplication: NSRunningApplication
-    var pid: pid_t
+    var runningApplication: NSRunningApplication?
+    var pid: pid_t?
     var bundleUrl: URL?
     
     init(_ runningApplication: NSRunningApplication) {
@@ -22,32 +22,88 @@ class Application: Hashable {
         
         self.pid = runningApplication.processIdentifier
         
-        self.element = AXUIElementCreateApplication(self.pid)
+        self.element = AXUIElementCreateApplication(self.pid!)
         
         self.title = runningApplication.localizedName ?? "Unknown Application"
         self.bundleUrl = runningApplication.bundleURL
     }
     
+    // Initialize from URL (for loading from persistence)
+    init?(url: URL) {
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return nil
+        }
+        
+        self.bundleUrl = url
+        self.title = url.deletingPathExtension().lastPathComponent
+        
+        // Try to find running instance
+        if let bundle = Bundle(url: url),
+           let bundleIdentifier = bundle.bundleIdentifier,
+           let runningApp = NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier).first {
+            self.runningApplication = runningApp
+            self.pid = runningApp.processIdentifier
+            self.element = AXUIElementCreateApplication(self.pid!)
+            self.title = runningApp.localizedName ?? self.title
+        } else {
+            self.runningApplication = nil
+            self.pid = nil
+            self.element = nil
+        }
+    }
+    
+    // Ensure application is running and refresh internal state
+    func ensureRunning() -> Bool {
+        guard let bundleUrl = self.bundleUrl else {
+            return false
+        }
+        
+        // Check if already running
+        if let runningApp = self.runningApplication,
+           runningApp.isTerminated == false {
+            return true
+        }
+        
+        // Try to find if it's running but we lost the reference
+        if let bundle = Bundle(url: bundleUrl),
+           let bundleIdentifier = bundle.bundleIdentifier,
+           let runningApp = NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier).first {
+            self.runningApplication = runningApp
+            self.pid = runningApp.processIdentifier
+            self.element = AXUIElementCreateApplication(self.pid!)
+            return true
+        }
+        
+        return false
+    }
+    
     func focus() {
         // Centralize relaunch logic here so callers don't need to care
         // whether the bound application is still running.
-        if self.runningApplication.isTerminated {
+        if self.runningApplication?.isTerminated == true {
             try? self.reopen()
             return
         }
         
         // If activation fails (can happen if the process is exiting), relaunch.
-        if !self.runningApplication.activate(options: []) {
+        if self.runningApplication?.activate(options: []) == false {
             try? self.reopen()
         }
     }
 
     func activate(options: NSApplication.ActivationOptions = []) {
-        self.runningApplication.activate(options: options)
+        if !ensureRunning() {
+            // App not running, launch it
+            try? reopen()
+        } else {
+            // App is running, just activate it
+            self.runningApplication?.activate(options: options)
+        }
     }
     
     func getFocusedWindow() -> Window? {
-        guard let windowElement: AXUIElement = element.getAttributeValue(.focusedWindow) else {
+        guard let element = element,
+              let windowElement: AXUIElement = element.getAttributeValue(.focusedWindow) else {
             return nil
         }
         
@@ -55,7 +111,8 @@ class Application: Hashable {
     }
     
     func getFirstWindow() -> Window? {
-        guard let windowElements: [AXUIElement] = element.getAttributeValue(.windows) else {
+        guard let element = element,
+              let windowElements: [AXUIElement] = element.getAttributeValue(.windows) else {
             return nil
         }
         
@@ -78,7 +135,7 @@ class Application: Hashable {
             if let runningApplication = runningApplication {
                 self.runningApplication = runningApplication
                 self.pid = runningApplication.processIdentifier
-                self.element = AXUIElementCreateApplication(self.pid)
+                self.element = AXUIElementCreateApplication(self.pid!)
             }
         }
         
@@ -123,8 +180,12 @@ class Application: Hashable {
     }
 
     func getAXWindows() -> [AXUIElement] {
+        guard let element = element else {
+            return []
+        }
+        
         // NOTE: Only returns windows in current Desktop (but multiple monitors does work)
-        guard let windows: [AXUIElement] = self.element.getAttributeValue(.windows) else {
+        guard let windows: [AXUIElement] = element.getAttributeValue(.windows) else {
             return []
         }
         
@@ -140,8 +201,12 @@ class Application: Hashable {
     }
     
     func listAvailableAttributes() -> [String] {
+        guard let element = element else {
+            return []
+        }
+        
         var attributesRef: CFArray?
-        let result = AXUIElementCopyAttributeNames(self.element, &attributesRef)
+        let result = AXUIElementCopyAttributeNames(element, &attributesRef)
         
         guard result == .success, let attributes = attributesRef as? [String] else {
             return []

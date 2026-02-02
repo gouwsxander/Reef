@@ -7,45 +7,71 @@
 
 import SwiftUI
 import KeyboardShortcuts
+import SwiftData
+import ServiceManagement
 
 @main
 struct ReefApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @StateObject private var profileManager: ProfileManager
+    @AppStorage("launchOnLogin") private var launchOnLogin = true
+    
+    let modelContainer: ModelContainer
+    
+    init() {
+        do {
+            modelContainer = try ModelContainer(for: Bindings.self)
+            let profileManager = ProfileManager(modelContext: modelContainer.mainContext)
+            _profileManager = StateObject(wrappedValue: profileManager)
+            AppDelegate.profileManager = profileManager
+            
+            // Sync launch at login state with system
+            if #available(macOS 13.0, *) {
+                let status = SMAppService.mainApp.status
+                _launchOnLogin = AppStorage(wrappedValue: status == .enabled, "launchOnLogin")
+            }
+        } catch {
+            fatalError("Failed to create ModelContainer: \(error)")
+        }
+    }
+
     var body: some Scene {
         Settings {
-            EmptyView()
+            PreferencesView()
+                .modelContainer(modelContainer)
+                .environmentObject(profileManager)
+        }
+        .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentSize)
+
+        MenuBarExtra {
+            MenuBarView()
+                .modelContainer(modelContainer)
+                .environmentObject(profileManager)
+        } label: {
+            Image(systemName: "fish.fill")
         }
     }
 }
 
 @MainActor
-class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate {
     static private(set) var instance: AppDelegate!
+    static var profileManager: ProfileManager!
+    static private(set) var modifierManager: ModifierManager!
     
-    private var bindings: Bindings!
-    private var menuController: MenuController!
     private var cycleController: CyclePanelController!
-    @State private var shortcutManager: ShortcutController!
-    
-    lazy var statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+    private var shortcutManager: ShortcutController!
+    private var windowManager: PreferencesController!
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.instance = self
+        AppDelegate.modifierManager = ModifierManager()
         
-        bindings = Bindings("Default")
-        menuController = MenuController(bindings)
         cycleController = CyclePanelController()
-        shortcutManager = ShortcutController(cycleController, bindings)
+        shortcutManager = ShortcutController(cycleController, AppDelegate.profileManager)
+        windowManager = PreferencesController()
         
-        // Create status bar
-        statusBarItem.button?.image = NSImage(systemSymbolName: "fish.fill", accessibilityDescription: "Reef menu")
-        statusBarItem.button?.imagePosition = .imageLeading
-        
-        statusBarItem.menu = menuController.menu
-        statusBarItem.menu?.delegate = self
-    }
-
-    func menuWillOpen(_ menu: NSMenu) {
-        self.menuController.updateMenu()
+        NSApp.setActivationPolicy(.accessory)
     }
 }

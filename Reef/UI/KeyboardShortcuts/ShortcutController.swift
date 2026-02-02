@@ -5,36 +5,37 @@
 //  Created by Xander Gouws on 12-09-2025.
 //
 
-
 import KeyboardShortcuts
 import Cocoa
-
 
 let numberKeys: [KeyboardShortcuts.Key] = [
     .zero, .one, .two, .three, .four,
     .five, .six, .seven, .eight, .nine
 ]
 
-
 extension KeyboardShortcuts.Name {
     static let bindShortcuts: [KeyboardShortcuts.Name] = (0...9).map { number in
-        Self("bind\(number)", default: .init(numberKeys[number], modifiers: [.control, .option]))
+        Self("bind\(number)")
     }
     
     static let activateShortcuts: [KeyboardShortcuts.Name] = (0...9).map { number in
-        Self("activate\(number)", default: .init(numberKeys[number], modifiers: [.control]))
+        Self("activate\(number)")
+    }
+    
+    static let profileShortcuts: [KeyboardShortcuts.Name] = (0...9).map { number in
+        Self("profile\(number)")
     }
 }
-
 
 @MainActor
 final class ShortcutController {
     private let cycleController: CyclePanelController
-    private let bindings: Bindings
+    private let profileManager: ProfileManager
     
-    init(_ cycleController: CyclePanelController, _ bindings: Bindings) {
+    init(_ cycleController: CyclePanelController, _ profileManager: ProfileManager) {
         self.cycleController = cycleController
-        self.bindings = bindings
+        self.profileManager = profileManager
+        
         setupShortcuts()
     }
     
@@ -47,6 +48,10 @@ final class ShortcutController {
             KeyboardShortcuts.onKeyDown(for: .activateShortcuts[number]) {
                 self.handleActivate(number: number)
             }
+            
+            KeyboardShortcuts.onKeyDown(for: .profileShortcuts[number]) {
+                self.handleProfile(number: number)
+            }
         }
     }
     
@@ -56,13 +61,13 @@ final class ShortcutController {
             return
         }
         
-        bindings.bind(application, number)
+        profileManager.currentProfile.bind(application, number)
         
         print("Bound \(application.title) to \(number)")
     }
     
     private func handleActivate(number: Int) {
-        guard let binding = bindings[number] else {
+        guard let binding = profileManager.currentProfile[number] else {
             NSSound.beep()
             return
         }
@@ -74,7 +79,7 @@ final class ShortcutController {
         }
 
         // If the bound application was quit/terminated, relaunch it and do not show the cycle panel.
-        if binding.runningApplication.isTerminated {
+        if binding.runningApplication?.isTerminated == true {
             binding.focus()
             return
         }
@@ -88,5 +93,14 @@ final class ShortcutController {
         }
         
         cycleController.showSwitcher(for: binding, startIndex: startIndex)
+    }
+    
+    func handleProfile(number: Int) {
+        guard let profile = profileManager.profilesByNumber[number] else {
+            NSSound.beep()
+            return
+        }
+        
+        profileManager.switchProfile(profile)
     }
 }
