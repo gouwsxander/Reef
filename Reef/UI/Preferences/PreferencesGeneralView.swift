@@ -7,6 +7,7 @@
 
 import SwiftUI
 import ServiceManagement
+import ApplicationServices
 
 struct PreferencesGeneralView: View {
     @AppStorage("launchOnLogin") private var launchOnLogin = true
@@ -14,8 +15,38 @@ struct PreferencesGeneralView: View {
     @AppStorage("appearance") private var appearance = "system"
     @AppStorage("defaultNumberOrder") private var defaultNumberOrder = "rightHanded"
     
+    @State private var hasAccessibilityPermission = AXIsProcessTrusted()
+    
+    // Timer to poll for accessibility permission changes
+    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    
     var body: some View {
         Form {
+            // Accessibility Permission Warning
+            if !hasAccessibilityPermission {
+                
+                    HStack(spacing: 12) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.yellow)
+                            .imageScale(.large)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Accessibility Permission Required")
+                                .fontWeight(.medium)
+                            Text("System Settings → Privacy & Security → Accessibility")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        Button("Open Settings") {
+                            openAccessibilitySettings()
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+            }
+            
             Section {
                 Toggle("Launch Reef at login", isOn: $launchOnLogin)
                     .onChange(of: launchOnLogin) { _, newValue in
@@ -36,6 +67,16 @@ struct PreferencesGeneralView: View {
         }
         .formStyle(.grouped)
         .frame(height: 190)
+        .onReceive(timer) { _ in
+            // Poll for permission changes
+            hasAccessibilityPermission = AXIsProcessTrusted()
+        }
+    }
+    
+    private func openAccessibilitySettings() {
+        // Open System Settings to the Privacy & Security > Accessibility pane
+        let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
+        NSWorkspace.shared.open(url)
     }
     
     private func setLaunchAtLogin(enabled: Bool) {
