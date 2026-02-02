@@ -8,11 +8,13 @@
 import SwiftUI
 import KeyboardShortcuts
 import SwiftData
+import ServiceManagement
 
 @main
 struct ReefApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var profileManager: ProfileManager
+    @AppStorage("launchOnLogin") private var launchOnLogin = true
     
     let modelContainer: ModelContainer
     
@@ -22,6 +24,12 @@ struct ReefApp: App {
             let profileManager = ProfileManager(modelContext: modelContainer.mainContext)
             _profileManager = StateObject(wrappedValue: profileManager)
             AppDelegate.profileManager = profileManager
+            
+            // Sync launch at login state with system
+            if #available(macOS 13.0, *) {
+                let status = SMAppService.mainApp.status
+                _launchOnLogin = AppStorage(wrappedValue: status == .enabled, "launchOnLogin")
+            }
         } catch {
             fatalError("Failed to create ModelContainer: \(error)")
         }
