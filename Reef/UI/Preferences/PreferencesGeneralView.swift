@@ -10,7 +10,7 @@ import ServiceManagement
 
 struct PreferencesGeneralView: View {
     @AppStorage("launchOnLogin") private var launchOnLogin = true
-    @AppStorage("hideMenubarIcon") private var hideMenubarIcon = false
+//    @AppStorage("hideMenubarIcon") private var hideMenubarIcon = false
     @AppStorage("appearance") private var appearance = "system"
     @AppStorage("defaultNumberOrder") private var defaultNumberOrder = "rightHanded"
     
@@ -21,7 +21,7 @@ struct PreferencesGeneralView: View {
                     .onChange(of: launchOnLogin) { _, newValue in
                         setLaunchAtLogin(enabled: newValue)
                     }
-                Toggle("Hide menubar icon", isOn: $hideMenubarIcon)
+//                Toggle("Hide menubar icon", isOn: $hideMenubarIcon)
             }
             
             Section {
