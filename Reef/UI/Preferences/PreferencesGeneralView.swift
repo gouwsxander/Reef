@@ -24,27 +24,26 @@ struct PreferencesGeneralView: View {
         Form {
             // Accessibility Permission Warning
             if !hasAccessibilityPermission {
-                
-                    HStack(spacing: 12) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.yellow)
-                            .imageScale(.large)
-                        
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Accessibility Permission Required")
-                                .fontWeight(.medium)
-                            Text("System Settings → Privacy & Security → Accessibility")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        Spacer()
-                        
-                        Button("Open Settings") {
-                            openAccessibilitySettings()
-                        }
-                        .buttonStyle(.borderedProminent)
+                HStack(spacing: 12) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.yellow)
+                        .imageScale(.large)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Accessibility Permission Required")
+                            .fontWeight(.medium)
+                        Text("System Settings → Privacy & Security → Accessibility")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
+                    
+                    Spacer()
+                    
+                    Button("Open Settings") {
+                        openAccessibilitySettings()
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
             }
             
             Section {
