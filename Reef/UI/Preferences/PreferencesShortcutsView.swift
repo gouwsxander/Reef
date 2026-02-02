@@ -75,7 +75,7 @@ struct PreferencesShortcutsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(height: 195)
+        .frame(height: 225)
     }
 }
 

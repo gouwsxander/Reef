@@ -81,7 +81,7 @@ struct PreferencesProfilesView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .frame(height: 575)
+        .frame(height: 635)
         .onAppear {
             if selectedProfileID == nil {
                 selectedProfileID = profileManager.currentProfile.persistentModelID
