@@ -49,7 +49,8 @@ struct ReefApp: App {
                 .modelContainer(modelContainer)
                 .environmentObject(profileManager)
         } label: {
-            Image(systemName: "fish.fill")
+            Image("menu_placeholder")
+            // Image(systemName: "fish.fill")
         }
     }
 }
