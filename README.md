@@ -1,6 +1,6 @@
 # Reef
 
-A macOS window manager for lightning-fast context switching.
+The macOS window manager that gives every app its own alt-tab
 
 ## What it does
 
