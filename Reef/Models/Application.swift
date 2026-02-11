@@ -15,16 +15,18 @@ class Application {
 
     var runningApplication: NSRunningApplication?
     var pid: pid_t?
+    var bundleIdentifier: String?
     var bundleUrl: URL?
     
     init(_ runningApplication: NSRunningApplication) {
         self.runningApplication = runningApplication
-        
+
         self.pid = runningApplication.processIdentifier
-        
+
         self.element = AXUIElementCreateApplication(self.pid!)
-        
+
         self.title = runningApplication.localizedName ?? "Unknown Application"
+        self.bundleIdentifier = runningApplication.bundleIdentifier
         self.bundleUrl = runningApplication.bundleURL
     }
     
@@ -33,8 +35,9 @@ class Application {
         guard FileManager.default.fileExists(atPath: url.path) else {
             return nil
         }
-        
+
         self.bundleUrl = url
+        self.bundleIdentifier = Bundle(url: url)?.bundleIdentifier
         self.title = url.deletingPathExtension().lastPathComponent
         
         // Try to find running instance
@@ -50,6 +53,23 @@ class Application {
             self.pid = nil
             self.element = nil
         }
+    }
+
+    convenience init?(bundleIdentifier: String) {
+        if let runningApp = NSRunningApplication
+            .runningApplications(withBundleIdentifier: bundleIdentifier)
+            .first
+        {
+            self.init(runningApp)
+            return
+        }
+
+        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) {
+            self.init(url: url)
+            return
+        }
+
+        return nil
     }
     
     // Ensure application is running and refresh internal state

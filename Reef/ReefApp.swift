@@ -20,7 +20,7 @@ struct ReefApp: App {
     
     init() {
         do {
-            modelContainer = try ModelContainer(for: Bindings.self)
+            modelContainer = try ModelContainer(for: Profile.self, Bindings.self, BindingEntry.self)
             let profileManager = ProfileManager(modelContext: modelContainer.mainContext)
             _profileManager = StateObject(wrappedValue: profileManager)
             AppDelegate.profileManager = profileManager

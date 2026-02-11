@@ -9,61 +9,34 @@ import Foundation
 import SwiftData
 
 @Model
-class Bindings {
-    var applications: [URL?]
-    var indices: [URL: Int]
+final class Bindings {
+    @Relationship(deleteRule: .cascade) var entries: [BindingEntry] = []
 
-    init() {
-        self.applications = Array(repeating: nil, count: 10)
-        self.indices = [:]
+    init(entries: [BindingEntry] = []) {
+        self.entries = entries
     }
-    
-    func bind(_ application: Application, _ index: Int) throws {
-        // Get bundle URL or else throw
-        guard let url = application.bundleUrl else {
-            throw ApplicationError.noBundleURL
-        }
-        
-        // Remove current binding at this index if exists
-        if let currentUrl = applications[index] {
-            indices[currentUrl] = nil
-        }
-        
-        // Remove previous index for this application if exists
-        if let currentIndex = indices[url] {
-            applications[currentIndex] = nil
-        }
 
-        applications[index] = url
-        indices[url] = index
+    func bind(bundleIdentifier: String, slot: Int) {
+        guard (0...9).contains(slot) else { return }
+
+        // Ensure one-to-one mapping by removing any existing slot or bundle matches.
+        entries.removeAll { $0.slot == slot || $0.bundleIdentifier == bundleIdentifier }
+        entries.append(BindingEntry(slot: slot, bundleIdentifier: bundleIdentifier))
     }
-    
-    func unbind(_ application: Application) throws {
-        // Get bundle URL or else throw
-        guard let url = application.bundleUrl else {
-            throw ApplicationError.noBundleURL
-        }
-        
-        if let index = indices[url] {
-            applications[index] = nil
-            indices[url] = nil
-        }
+
+    func unbind(slot: Int) {
+        entries.removeAll { $0.slot == slot }
     }
-    
-    subscript(index: Int) -> Application? {
-        if let url = applications[index] {
-            return Application(url)
-        }
-        
-        return nil
+
+    func unbind(bundleIdentifier: String) {
+        entries.removeAll { $0.bundleIdentifier == bundleIdentifier }
     }
-    
-    subscript(application: Application) -> Int? {
-        // Get bundle URL or else throw
-        guard let url = application.bundleUrl else {
-            return nil
-        }
-        
-        return indices[url]
+
+    func bundleIdentifier(for slot: Int) -> String? {
+        entries.first(where: { $0.slot == slot })?.bundleIdentifier
+    }
+
+    func slot(for bundleIdentifier: String) -> Int? {
+        entries.first(where: { $0.bundleIdentifier == bundleIdentifier })?.slot
     }
 }

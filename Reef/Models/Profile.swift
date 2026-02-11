@@ -1,5 +1,5 @@
 //
-//  Bindings.swift
+//  Profile.swift
 //  Reef
 //
 //  Created by Xander Gouws on 18-09-2025.
@@ -9,16 +9,27 @@ import Foundation
 import SwiftData
 
 @Model
-class Profile {
+final class Profile {
     var name: String
-    var number: Int?
+    var createdDate: Date
+    var lastUsedDate: Date
+    var profileNumber: Int?
     var numberOrder: String?
-    var bindings: Bindings
+    @Relationship(deleteRule: .cascade) var bindings: Bindings
 
-    init(_ name: String) {
+    init(
+        name: String,
+        createdDate: Date = .now,
+        lastUsedDate: Date = .now,
+        profileNumber: Int? = nil,
+        numberOrder: String? = nil,
+        bindings: Bindings = Bindings()
+    ) {
         self.name = name
-        self.numberOrder = nil
-        self.number = nil
-        self.bindings = Bindings()
+        self.createdDate = createdDate
+        self.lastUsedDate = lastUsedDate
+        self.profileNumber = profileNumber
+        self.numberOrder = numberOrder
+        self.bindings = bindings
     }
 }
