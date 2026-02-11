@@ -16,7 +16,7 @@ struct PreferencesProfilesView: View {
         }
         return ModifierManager()
     }()
-    @Query(sort: \Bindings.createdDate, order: .forward) var profiles: [Bindings]
+    @Query(sort: \Profile.createdDate, order: .forward) var profiles: [Profile]
     @State private var selectedProfileID: PersistentIdentifier?
     
     var body: some View {
@@ -117,7 +117,7 @@ struct PreferencesProfilesView: View {
 }
 
 struct ProfileDetailView: View {
-    @ObservedObject var profile: Bindings
+    @Bindable var profile: Profile
     @ObservedObject var profileManager: ProfileManager
     @ObservedObject var modifierManager: ModifierManager
     @AppStorage("defaultNumberOrder") private var defaultNumberOrder = "rightHanded"
@@ -128,7 +128,7 @@ struct ProfileDetailView: View {
             Section {
                 TextField("Profile name:", text: $profile.name)
                     .onChange(of: profile.name) { _, _ in
-                        try? profileManager.modelContext.save()
+                        profileManager.save()
                     }
                 
                 Picker("Number order:", selection: $profile.numberOrder) {
@@ -138,7 +138,7 @@ struct ProfileDetailView: View {
                 }
                 .pickerStyle(.menu)
                 .onChange(of: profile.numberOrder) { _, _ in
-                    try? profileManager.modelContext.save()
+                    profileManager.save()
                 }
                 
                 Picker("Profile number:", selection: $profile.profileNumber) {
@@ -185,16 +185,19 @@ struct ProfileDetailView: View {
                         Text("\(number):")
                             .frame(width: 30, alignment: .leading)
                         
-                        if let app = profile[number],
-                           let bundleUrl = app.bundleUrl {
-                            Text(bundleUrl.deletingPathExtension().lastPathComponent)
-                                .foregroundStyle(.secondary)
+                        if let bundleIdentifier = profileManager.bundleIdentifier(for: number, in: profile) {
+                            if let app = Application(bundleIdentifier: bundleIdentifier) {
+                                Text(app.title)
+                                    .foregroundStyle(.secondary)
+                            } else {
+                                Text(bundleIdentifier)
+                                    .foregroundStyle(.secondary)
+                            }
                             
                             Spacer()
                             
                             Button("Remove") {
-                                profile.unbind(app)
-                                try? profileManager.modelContext.save()
+                                profileManager.unbind(slot: number, in: profile)
                             }
                             .buttonStyle(.borderless)
                         } else {
@@ -236,8 +239,11 @@ struct ProfileDetailView: View {
         
         if panel.runModal() == .OK, let url = panel.url {
             if let app = Application(url: url) {
-                profile.bind(app, number)
-                try? profileManager.modelContext.save()
+                guard let bundleIdentifier = app.bundleIdentifier else {
+                    NSSound.beep()
+                    return
+                }
+                profileManager.bind(bundleIdentifier: bundleIdentifier, to: number, in: profile)
             }
         }
     }
