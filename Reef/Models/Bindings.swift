@@ -6,84 +6,64 @@
 //
 
 import Foundation
-import Cocoa
 import SwiftData
 
 @Model
-class Bindings: ObservableObject {
-    var name: String
-    var createdDate: Date?
-    var lastUsedDate: Date?
-    var numberOrder: String? // nil means "use default"
-    var profileNumber: Int?
+class Bindings {
+    var applications: [URL?]
+    var indices: [URL: Int]
 
-    // Store bindings as URLs for persistence (SwiftData compatible)
-    var bindingURLs: [Int: URL]
-    
-    // Runtime state (not persisted, transient)
-    @Transient var applications: [Application?] = Array(repeating: nil, count: 10)
-    @Transient var indices: [Application: Int] = [:]
-
-    init(_ name: String, numberOrder: String? = nil) {
-        self.name = name
-        self.lastUsedDate = Date.now
-        self.createdDate = Date.now
-        self.numberOrder = numberOrder
-        self.bindingURLs = [:]
+    init() {
+        self.applications = Array(repeating: nil, count: 10)
+        self.indices = [:]
     }
     
-    // Load applications from URLs
-    func loadApplications() {
-        applications = Array(repeating: nil, count: 10)
-        indices = [:]
-        
-        for (index, url) in bindingURLs {
-            if let app = Application(url: url) {
-                applications[index] = app
-                indices[app] = index
-            }
+    func bind(_ application: Application, _ index: Int) throws {
+        // Get bundle URL or else throw
+        guard let url = application.bundleUrl else {
+            throw ApplicationError.noBundleURL
         }
         
-        objectWillChange.send()
-    }
-    
-    func bind(_ application: Application, _ index: Int) {
         // Remove current binding at this index if exists
-        if let currentApp = applications[index] {
-            indices[currentApp] = nil
+        if let currentUrl = applications[index] {
+            indices[currentUrl] = nil
         }
         
         // Remove previous index for this application if exists
-        if let currentIndex = indices[application] {
+        if let currentIndex = indices[url] {
             applications[currentIndex] = nil
-            bindingURLs.removeValue(forKey: currentIndex)
         }
 
-        applications[index] = application
-        indices[application] = index
-        
-        if let url = application.bundleUrl {
-            bindingURLs[index] = url
-        }
-        
-        objectWillChange.send()
+        applications[index] = url
+        indices[url] = index
     }
     
-    func unbind(_ application: Application) {
-        if let index = indices[application] {
+    func unbind(_ application: Application) throws {
+        // Get bundle URL or else throw
+        guard let url = application.bundleUrl else {
+            throw ApplicationError.noBundleURL
+        }
+        
+        if let index = indices[url] {
             applications[index] = nil
-            indices[application] = nil
-            bindingURLs.removeValue(forKey: index)
-            
-            objectWillChange.send()
+            indices[url] = nil
         }
     }
     
     subscript(index: Int) -> Application? {
-        return applications[index]
+        if let url = applications[index] {
+            return Application(url)
+        }
+        
+        return nil
     }
     
     subscript(application: Application) -> Int? {
-        return indices[application]
+        // Get bundle URL or else throw
+        guard let url = application.bundleUrl else {
+            return nil
+        }
+        
+        return indices[url]
     }
 }
