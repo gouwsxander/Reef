@@ -9,7 +9,7 @@ import Foundation
 import Cocoa
 
 
-class Application: Hashable {
+class Application {
     var title: String
     var element: AXUIElement?
 
@@ -146,14 +146,6 @@ class Application: Hashable {
         )
     }
     
-    static func == (lhs: Application, rhs: Application) -> Bool {
-        return lhs.bundleUrl == rhs.bundleUrl && lhs.title == rhs.title
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(self.bundleUrl)
-    }
-        
     static func getFrontApplication() -> Application? {
         guard let runningApplication = NSWorkspace.shared.frontmostApplication else {
             return nil
