@@ -101,11 +101,11 @@ final class ShortcutController {
     }
     
     func handleProfile(number: Int) {
-        guard let profile = profileManager.profilesByNumber[number] else {
+        guard let profileID = profileManager.profileID(forNumber: number) else {
             NSSound.beep()
             return
         }
         
-        profileManager.switchProfile(profile)
+        profileManager.switchProfile(id: profileID)
     }
 }

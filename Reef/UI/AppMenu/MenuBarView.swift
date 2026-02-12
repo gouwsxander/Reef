@@ -6,11 +6,10 @@
 //
 
 import SwiftUI
-import SwiftData
 
 struct MenuBarView: View {
     @EnvironmentObject var profileManager: ProfileManager
-    @Query(sort: \Profile.createdDate, order: .forward) var profiles: [Profile]
+    private var profiles: [Profile] { profileManager.profiles }
     
     @Environment(\.openSettings) private var openSettings
     @AppStorage("defaultNumberOrder") private var defaultNumberOrder = "rightHanded"
@@ -64,7 +63,7 @@ struct MenuBarView: View {
         }
         
         // Append unnumbered profiles sorted by creation date
-        return sortedNumbered + unnumberedProfiles.sorted { $0.createdDate < $1.createdDate }
+        return sortedNumbered + unnumberedProfiles.sorted { $0.createdAt < $1.createdAt }
     }
     
     var body: some View {
@@ -85,10 +84,11 @@ struct MenuBarView: View {
         Divider()
         
         // Bindings - use profile's numberOrder or fall back to default
-        let numberOrder = profileManager.currentProfile.numberOrder ?? defaultNumberOrder
+        let currentProfile = profileManager.currentProfile
+        let numberOrder = currentProfile?.numberOrder ?? defaultNumberOrder
         ForEach(Array(stride(from: 0, through: 9, by: 1)), id: \.self) { i in
             let number = getNumber(for: i, order: numberOrder)
-            if let binding = profileManager.application(for: number) {
+            if let binding = profileManager.application(for: number, in: currentProfile) {
                 if modifierManager.activateEnabled {
                     Button("\(binding.title)") {
                         binding.focus()

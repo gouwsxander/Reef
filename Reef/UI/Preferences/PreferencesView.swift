@@ -25,4 +25,5 @@ struct PreferencesView: View {
 
 #Preview {
     PreferencesView()
+        .environmentObject(ProfileManager())
 }
