@@ -6,115 +6,109 @@
 //
 
 import SwiftUI
-import SwiftData
+import Foundation
 
 @MainActor
-class ProfileManager: ObservableObject {
-    @Published var currentProfile: Profile
-    
-    let modelContext: ModelContext
-    
-    private(set) var profilesByNumber: [Int: Profile] = [:]
-    
-    init(modelContext: ModelContext) {
-        self.modelContext = modelContext
-        
-        let descriptor = FetchDescriptor<Profile>(
-            sortBy: [SortDescriptor(\.lastUsedDate, order: .reverse)]
-        )
-        
-        do {
-            let fetchedProfiles = try modelContext.fetch(descriptor)
-            
-            if fetchedProfiles.isEmpty {
-                let defaultProfile = Profile(name: "Default")
-                modelContext.insert(defaultProfile)
-                try modelContext.save()
-                self.currentProfile = defaultProfile
-            } else {
-                self.currentProfile = fetchedProfiles.first!
-            }
-        } catch {
-            let defaultProfile = Profile(name: "Default")
-            self.currentProfile = defaultProfile
-            modelContext.insert(defaultProfile)
-            try? modelContext.save()
-        }
-        
-        rebuildNumberCache()
+final class ProfileManager: ObservableObject {
+    @Published var profiles: [Profile] = [] {
+        didSet { scheduleSave() }
     }
-    
+    @Published var currentProfileID: UUID? {
+        didSet { scheduleSave() }
+    }
+
+    private let storeURL: URL
+    private var isLoading = false
+    private var saveTask: Task<Void, Never>?
+
+    init(storeURL: URL? = nil) {
+        self.storeURL = storeURL ?? Self.defaultStoreURL()
+        load()
+    }
+
+    var currentProfile: Profile? {
+        guard let currentProfileID else { return nil }
+        return profiles.first(where: { $0.id == currentProfileID })
+    }
+
     func switchProfile(_ profile: Profile) {
-        currentProfile = profile
-        currentProfile.lastUsedDate = Date.now
-        save()
-        objectWillChange.send()
+        switchProfile(id: profile.id)
     }
-    
+
+    func switchProfile(id: UUID) {
+        currentProfileID = id
+        touchLastUsed(id: id)
+    }
+
     func createProfile(name: String, numberOrder: String? = nil) -> Profile {
-        let profile = Profile(name: name, numberOrder: numberOrder)
-        modelContext.insert(profile)
-        save()
-        rebuildNumberCache()
+        var profile = Profile(name: name, numberOrder: numberOrder)
+        profile.bindings = Profile.normalizedBindings(profile.bindings)
+        profiles.append(profile)
+
+        if currentProfileID == nil {
+            currentProfileID = profile.id
+        }
+
         return profile
     }
-    
+
     func deleteProfile(_ profile: Profile) {
-        modelContext.delete(profile)
-        save()
-        rebuildNumberCache()
+        profiles.removeAll { $0.id == profile.id }
+
+        if currentProfileID == profile.id {
+            currentProfileID = profiles.first?.id
+        }
     }
-    
+
     // Assigns or removes a profile number. Enforces uniqueness — returns false
     // if the requested number is already taken by another profile.
     @discardableResult
     func setProfileNumber(_ profile: Profile, number: Int?) -> Bool {
         if let number = number {
-            // Check uniqueness: the number must not be owned by a *different* profile
-            if let existing = profilesByNumber[number], existing.persistentModelID != profile.persistentModelID {
+            if let existing = profileID(forNumber: number), existing != profile.id {
                 return false
             }
         }
-        
-        profile.profileNumber = number
-        save()
-        rebuildNumberCache()
+
+        updateProfile(id: profile.id) { updated in
+            updated.profileNumber = number
+        }
         return true
     }
-    
+
     // Returns which of 0–9 are available for the given profile.
     // Includes numbers not taken by anyone, plus the profile's own current number.
     func availableNumbers(excluding profile: Profile) -> [Int] {
         (0...9).filter { number in
-            profilesByNumber[number] == nil ||
-            profilesByNumber[number]?.persistentModelID == profile.persistentModelID
+            let existing = profileID(forNumber: number)
+            return existing == nil || existing == profile.id
         }
     }
 
     func bind(bundleIdentifier: String, to slot: Int, in profile: Profile? = nil) {
-        let targetProfile = profile ?? currentProfile
-        targetProfile.bindings.bind(bundleIdentifier: bundleIdentifier, slot: slot)
-        save()
-        objectWillChange.send()
+        guard let targetID = (profile ?? currentProfile)?.id else { return }
+        updateProfile(id: targetID) { updated in
+            updated.bind(bundleIdentifier: bundleIdentifier, slot: slot)
+        }
     }
 
     func unbind(slot: Int, in profile: Profile? = nil) {
-        let targetProfile = profile ?? currentProfile
-        targetProfile.bindings.unbind(slot: slot)
-        save()
-        objectWillChange.send()
+        guard let targetID = (profile ?? currentProfile)?.id else { return }
+        updateProfile(id: targetID) { updated in
+            updated.unbind(slot: slot)
+        }
     }
 
     func unbind(bundleIdentifier: String, in profile: Profile? = nil) {
-        let targetProfile = profile ?? currentProfile
-        targetProfile.bindings.unbind(bundleIdentifier: bundleIdentifier)
-        save()
-        objectWillChange.send()
+        guard let targetID = (profile ?? currentProfile)?.id else { return }
+        updateProfile(id: targetID) { updated in
+            updated.unbind(bundleIdentifier: bundleIdentifier)
+        }
     }
 
     func bundleIdentifier(for slot: Int, in profile: Profile? = nil) -> String? {
-        let targetProfile = profile ?? currentProfile
-        return targetProfile.bindings.bundleIdentifier(for: slot)
+        guard let target = profile ?? currentProfile else { return nil }
+        return target.bundleIdentifier(for: slot)
     }
 
     func application(for slot: Int, in profile: Profile? = nil) -> Application? {
@@ -124,20 +118,128 @@ class ProfileManager: ObservableObject {
         return Application(bundleIdentifier: bundleIdentifier)
     }
 
-    func save() {
-        try? modelContext.save()
-    }
-
-    private func rebuildNumberCache() {
-        profilesByNumber = [:]
-        
-        let descriptor = FetchDescriptor<Profile>()
-        guard let profiles = try? modelContext.fetch(descriptor) else { return }
-        
-        for profile in profiles {
-            if let number = profile.profileNumber {
-                profilesByNumber[number] = profile
+    func saveNow() {
+        let state = ProfileStoreState(
+            schemaVersion: 1,
+            currentProfileID: currentProfileID,
+            profiles: profiles.map { profile in
+                var normalized = profile
+                normalized.bindings = Profile.normalizedBindings(profile.bindings)
+                return normalized
             }
+        )
+
+        do {
+            let data = try ProfileStoreState.encoder.encode(state)
+            try writeAtomically(data: data, to: storeURL)
+        } catch {
+            print("Failed to save profiles: \(error)")
         }
     }
+
+    private func scheduleSave() {
+        guard !isLoading else { return }
+        saveTask?.cancel()
+        saveTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            self?.saveNow()
+        }
+    }
+
+    private func load() {
+        isLoading = true
+        defer { isLoading = false }
+
+        guard FileManager.default.fileExists(atPath: storeURL.path) else {
+            let defaultProfile = Profile(name: "Default")
+            profiles = [defaultProfile]
+            currentProfileID = defaultProfile.id
+            return
+        }
+
+        do {
+            let data = try Data(contentsOf: storeURL)
+            let state = try ProfileStoreState.decoder.decode(ProfileStoreState.self, from: data)
+            profiles = state.profiles.map { profile in
+                var normalized = profile
+                normalized.bindings = Profile.normalizedBindings(profile.bindings)
+                return normalized
+            }
+
+            if profiles.isEmpty {
+                let defaultProfile = Profile(name: "Default")
+                profiles = [defaultProfile]
+                currentProfileID = defaultProfile.id
+                return
+            }
+
+            if let current = state.currentProfileID,
+               profiles.contains(where: { $0.id == current }) {
+                currentProfileID = current
+            } else {
+                currentProfileID = profiles.first?.id
+            }
+        } catch {
+            print("Failed to load profiles: \(error)")
+            let defaultProfile = Profile(name: "Default")
+            profiles = [defaultProfile]
+            currentProfileID = defaultProfile.id
+        }
+    }
+
+    private func updateProfile(id: UUID, mutate: (inout Profile) -> Void) {
+        guard let index = profiles.firstIndex(where: { $0.id == id }) else { return }
+        var updated = profiles[index]
+        mutate(&updated)
+        profiles[index] = updated
+    }
+
+    private func touchLastUsed(id: UUID) {
+        updateProfile(id: id) { updated in
+            updated.lastUsedAt = .now
+        }
+    }
+
+    func profileID(forNumber number: Int) -> UUID? {
+        profiles.first(where: { $0.profileNumber == number })?.id
+    }
+
+    private func writeAtomically(data: Data, to url: URL) throws {
+        let directory = url.deletingLastPathComponent()
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        if !FileManager.default.fileExists(atPath: url.path) {
+            try data.write(to: url, options: .atomic)
+            return
+        }
+
+        let tmpURL = directory.appendingPathComponent(".profiles.json.tmp")
+        try data.write(to: tmpURL, options: .atomic)
+        _ = try FileManager.default.replaceItemAt(url, withItemAt: tmpURL)
+    }
+
+    nonisolated private static func defaultStoreURL() -> URL {
+        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let bundleID = Bundle.main.bundleIdentifier ?? "Reef"
+        return base.appendingPathComponent(bundleID, isDirectory: true)
+            .appendingPathComponent("profiles.json")
+    }
+}
+
+private struct ProfileStoreState: Codable {
+    let schemaVersion: Int
+    let currentProfileID: UUID?
+    let profiles: [Profile]
+
+    static let encoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+        return encoder
+    }()
+
+    static let decoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
+    }()
 }

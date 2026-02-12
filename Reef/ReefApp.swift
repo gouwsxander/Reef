@@ -7,7 +7,6 @@
 
 import SwiftUI
 import KeyboardShortcuts
-import SwiftData
 import ServiceManagement
 
 @main
@@ -16,29 +15,21 @@ struct ReefApp: App {
     @StateObject private var profileManager: ProfileManager
     @AppStorage("launchOnLogin") private var launchOnLogin = true
     
-    let modelContainer: ModelContainer
-    
     init() {
-        do {
-            modelContainer = try ModelContainer(for: Profile.self, Bindings.self, BindingEntry.self)
-            let profileManager = ProfileManager(modelContext: modelContainer.mainContext)
-            _profileManager = StateObject(wrappedValue: profileManager)
-            AppDelegate.profileManager = profileManager
-            
-            // Sync launch at login state with system
-            if #available(macOS 13.0, *) {
-                let status = SMAppService.mainApp.status
-                _launchOnLogin = AppStorage(wrappedValue: status == .enabled, "launchOnLogin")
-            }
-        } catch {
-            fatalError("Failed to create ModelContainer: \(error)")
+        let profileManager = ProfileManager()
+        _profileManager = StateObject(wrappedValue: profileManager)
+        AppDelegate.profileManager = profileManager
+        
+        // Sync launch at login state with system
+        if #available(macOS 13.0, *) {
+            let status = SMAppService.mainApp.status
+            _launchOnLogin = AppStorage(wrappedValue: status == .enabled, "launchOnLogin")
         }
     }
 
     var body: some Scene {
         Settings {
             PreferencesView()
-                .modelContainer(modelContainer)
                 .environmentObject(profileManager)
         }
         .windowStyle(.hiddenTitleBar)
@@ -46,7 +37,6 @@ struct ReefApp: App {
 
         MenuBarExtra {
             MenuBarView()
-                .modelContainer(modelContainer)
                 .environmentObject(profileManager)
         } label: {
             Image("menu_placeholder")
@@ -74,5 +64,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         windowManager = PreferencesController()
         
         NSApp.setActivationPolicy(.accessory)
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        AppDelegate.profileManager.saveNow()
     }
 }

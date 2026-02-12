@@ -6,30 +6,75 @@
 //
 
 import Foundation
-import SwiftData
 
-@Model
-final class Profile {
+struct Profile: Codable, Identifiable, Equatable {
+    var id: UUID
     var name: String
-    var createdDate: Date
-    var lastUsedDate: Date
+    var createdAt: Date
+    var lastUsedAt: Date
     var profileNumber: Int?
     var numberOrder: String?
-    @Relationship(deleteRule: .cascade) var bindings: Bindings
+    var bindings: Bindings
 
     init(
+        id: UUID = UUID(),
         name: String,
-        createdDate: Date = .now,
-        lastUsedDate: Date = .now,
+        createdAt: Date = .now,
+        lastUsedAt: Date = .now,
         profileNumber: Int? = nil,
         numberOrder: String? = nil,
-        bindings: Bindings = Bindings()
+        bindings: Bindings = Array(repeating: nil, count: 10)
     ) {
+        self.id = id
         self.name = name
-        self.createdDate = createdDate
-        self.lastUsedDate = lastUsedDate
+        self.createdAt = createdAt
+        self.lastUsedAt = lastUsedAt
         self.profileNumber = profileNumber
         self.numberOrder = numberOrder
-        self.bindings = bindings
+        self.bindings = Profile.normalizedBindings(bindings)
+    }
+}
+
+extension Profile {
+    static func normalizedBindings(_ bindings: [String?]) -> [String?] {
+        if bindings.count == 10 { return bindings }
+        if bindings.count > 10 { return Array(bindings.prefix(10)) }
+        return bindings + Array(repeating: nil, count: 10 - bindings.count)
+    }
+
+    mutating func bind(bundleIdentifier: String, slot: Int) {
+        guard (0...9).contains(slot) else { return }
+        bindings = Profile.normalizedBindings(bindings)
+
+        for index in bindings.indices {
+            if bindings[index] == bundleIdentifier {
+                bindings[index] = nil
+            }
+        }
+
+        bindings[slot] = bundleIdentifier
+    }
+
+    mutating func unbind(slot: Int) {
+        guard (0...9).contains(slot) else { return }
+        bindings = Profile.normalizedBindings(bindings)
+        bindings[slot] = nil
+    }
+
+    mutating func unbind(bundleIdentifier: String) {
+        for index in bindings.indices {
+            if bindings[index] == bundleIdentifier {
+                bindings[index] = nil
+            }
+        }
+    }
+
+    func bundleIdentifier(for slot: Int) -> String? {
+        guard (0...9).contains(slot) else { return nil }
+        return Profile.normalizedBindings(bindings)[slot]
+    }
+
+    func slot(for bundleIdentifier: String) -> Int? {
+        Profile.normalizedBindings(bindings).firstIndex(where: { $0 == bundleIdentifier })
     }
 }
