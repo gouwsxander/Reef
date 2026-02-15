@@ -214,6 +214,7 @@ final class ProfileManager: ObservableObject {
 
         let tmpURL = directory.appendingPathComponent(".profiles.json.tmp")
         try data.write(to: tmpURL, options: .atomic)
+        defer { try? FileManager.default.removeItem(at: tmpURL) }
         _ = try FileManager.default.replaceItemAt(url, withItemAt: tmpURL)
     }
 
