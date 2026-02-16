@@ -60,14 +60,19 @@ final class ShortcutController {
             NSSound.beep()
             return
         }
-        
-        profileManager.currentProfile.bind(application, number)
-        
+
+        guard let bundleIdentifier = application.bundleIdentifier else {
+            NSSound.beep()
+            return
+        }
+
+        profileManager.bind(bundleIdentifier: bundleIdentifier, to: number)
+
         print("Bound \(application.title) to \(number)")
     }
     
     private func handleActivate(number: Int) {
-        guard let binding = profileManager.currentProfile[number] else {
+        guard let binding = profileManager.application(for: number) else {
             NSSound.beep()
             return
         }
@@ -96,11 +101,11 @@ final class ShortcutController {
     }
     
     func handleProfile(number: Int) {
-        guard let profile = profileManager.profilesByNumber[number] else {
+        guard let profileID = profileManager.profileID(forNumber: number) else {
             NSSound.beep()
             return
         }
         
-        profileManager.switchProfile(profile)
+        profileManager.switchProfile(id: profileID)
     }
 }

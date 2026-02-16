@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import SwiftData
 
 struct PreferencesProfilesView: View {
     @EnvironmentObject var profileManager: ProfileManager
@@ -16,13 +15,13 @@ struct PreferencesProfilesView: View {
         }
         return ModifierManager()
     }()
-    @Query(sort: \Bindings.createdDate, order: .forward) var profiles: [Bindings]
-    @State private var selectedProfileID: PersistentIdentifier?
+    private var profiles: [Profile] { profileManager.profiles }
+    @State private var selectedProfileID: UUID?
     
     var body: some View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
-                List(profiles, id: \.persistentModelID, selection: $selectedProfileID) { profile in
+                List(profiles, id: \.id, selection: $selectedProfileID) { profile in
                     HStack {
                         Text(profile.name)
 
@@ -35,11 +34,11 @@ struct PreferencesProfilesView: View {
                                 .frame(minWidth: 40, alignment: .trailing)
                         }
                     }
-                    .tag(profile.persistentModelID)
+                    .tag(profile.id)
                 }
                 .onChange(of: selectedProfileID) { _, newID in
                     if let newID = newID,
-                       let profile = profiles.first(where: { $0.persistentModelID == newID }) {
+                       let profile = profiles.first(where: { $0.id == newID }) {
                         profileManager.switchProfile(profile)
                     }
                 }
@@ -69,9 +68,9 @@ struct PreferencesProfilesView: View {
             Divider()
             
             if let selectedProfileID = selectedProfileID,
-               let selectedProfile = profiles.first(where: { $0.persistentModelID == selectedProfileID }) {
+               let selectedIndex = profiles.firstIndex(where: { $0.id == selectedProfileID }) {
                 ProfileDetailView(
-                    profile: selectedProfile,
+                    profile: $profileManager.profiles[selectedIndex],
                     profileManager: profileManager,
                     modifierManager: modifierManager
                 )
@@ -84,20 +83,20 @@ struct PreferencesProfilesView: View {
         .frame(height: 635)
         .onAppear {
             if selectedProfileID == nil {
-                selectedProfileID = profileManager.currentProfile.persistentModelID
+                selectedProfileID = profileManager.currentProfileID
             }
         }
     }
     
     private func addProfile() {
         let newProfile = profileManager.createProfile(name: "New Profile")
-        selectedProfileID = newProfile.persistentModelID
+        selectedProfileID = newProfile.id
     }
     
     private func removeProfile() {
         guard profiles.count > 1,
               let selectedID = selectedProfileID,
-              let selectedIndex = profiles.firstIndex(where: { $0.persistentModelID == selectedID }) else {
+              let selectedIndex = profiles.firstIndex(where: { $0.id == selectedID }) else {
             return
         }
         
@@ -107,17 +106,17 @@ struct PreferencesProfilesView: View {
         let nextIndex = selectedIndex + 1 < profiles.count ? selectedIndex + 1 : selectedIndex - 1
         let nextProfile = profiles[nextIndex]
         
-        if selectedProfile.persistentModelID == profileManager.currentProfile.persistentModelID {
+        if selectedProfile.id == profileManager.currentProfileID {
             profileManager.switchProfile(nextProfile)
         }
         
         profileManager.deleteProfile(selectedProfile)
-        selectedProfileID = nextProfile.persistentModelID
+        selectedProfileID = nextProfile.id
     }
 }
 
 struct ProfileDetailView: View {
-    @ObservedObject var profile: Bindings
+    @Binding var profile: Profile
     @ObservedObject var profileManager: ProfileManager
     @ObservedObject var modifierManager: ModifierManager
     @AppStorage("defaultNumberOrder") private var defaultNumberOrder = "rightHanded"
@@ -127,9 +126,6 @@ struct ProfileDetailView: View {
         Form {
             Section {
                 TextField("Profile name:", text: $profile.name)
-                    .onChange(of: profile.name) { _, _ in
-                        try? profileManager.modelContext.save()
-                    }
                 
                 Picker("Number order:", selection: $profile.numberOrder) {
                     Text("Use default").tag(nil as String?)
@@ -137,9 +133,6 @@ struct ProfileDetailView: View {
                     Text("Left handed (1, ..., 9, 0)").tag("leftHanded" as String?)
                 }
                 .pickerStyle(.menu)
-                .onChange(of: profile.numberOrder) { _, _ in
-                    try? profileManager.modelContext.save()
-                }
                 
                 Picker("Profile number:", selection: $profile.profileNumber) {
                     Text("Unnumbered").tag(nil as Int?)
@@ -166,8 +159,10 @@ struct ProfileDetailView: View {
                     }
                 }
                 .pickerStyle(.menu)
-                .onChange(of: profile.profileNumber) { _, _ in
-                    profileManager.setProfileNumber(profile, number: profile.profileNumber)
+                .onChange(of: profile.profileNumber) { oldValue, newValue in
+                    if !profileManager.setProfileNumber(profile, number: newValue) {
+                        profile.profileNumber = oldValue
+                    }
                 }
             } footer: {
                 if let number = profile.profileNumber {
@@ -185,16 +180,19 @@ struct ProfileDetailView: View {
                         Text("\(number):")
                             .frame(width: 30, alignment: .leading)
                         
-                        if let app = profile[number],
-                           let bundleUrl = app.bundleUrl {
-                            Text(bundleUrl.deletingPathExtension().lastPathComponent)
-                                .foregroundStyle(.secondary)
+                        if let bundleIdentifier = profileManager.bundleIdentifier(for: number, in: profile) {
+                            if let app = Application(bundleIdentifier: bundleIdentifier) {
+                                Text(app.title)
+                                    .foregroundStyle(.secondary)
+                            } else {
+                                Text(bundleIdentifier)
+                                    .foregroundStyle(.secondary)
+                            }
                             
                             Spacer()
                             
                             Button("Remove") {
-                                profile.unbind(app)
-                                try? profileManager.modelContext.save()
+                                profileManager.unbind(slot: number, in: profile)
                             }
                             .buttonStyle(.borderless)
                         } else {
@@ -236,8 +234,11 @@ struct ProfileDetailView: View {
         
         if panel.runModal() == .OK, let url = panel.url {
             if let app = Application(url: url) {
-                profile.bind(app, number)
-                try? profileManager.modelContext.save()
+                guard let bundleIdentifier = app.bundleIdentifier else {
+                    NSSound.beep()
+                    return
+                }
+                profileManager.bind(bundleIdentifier: bundleIdentifier, to: number, in: profile)
             }
         }
     }

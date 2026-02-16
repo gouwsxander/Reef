@@ -6,11 +6,10 @@
 //
 
 import SwiftUI
-import SwiftData
 
 struct MenuBarView: View {
     @EnvironmentObject var profileManager: ProfileManager
-    @Query(sort: \Bindings.createdDate, order: .forward) var profiles: [Bindings]
+    private var profiles: [Profile] { profileManager.profiles }
     
     @Environment(\.openSettings) private var openSettings
     @AppStorage("defaultNumberOrder") private var defaultNumberOrder = "rightHanded"
@@ -32,13 +31,13 @@ struct MenuBarView: View {
     }
     
     // Helper to get sorted profiles based on default number order
-    private var sortedProfiles: [Bindings] {
+    private var sortedProfiles: [Profile] {
         // Separate profiles with and without numbers
         let numberedProfiles = profiles.filter { $0.profileNumber != nil }
         let unnumberedProfiles = profiles.filter { $0.profileNumber == nil }
         
         // Sort numbered profiles based on defaultNumberOrder
-        let sortedNumbered: [Bindings]
+        let sortedNumbered: [Profile]
         if defaultNumberOrder == "rightHanded" {
             // Right handed: 0, 9, 8, ..., 1
             sortedNumbered = numberedProfiles.sorted { profile1, profile2 in
@@ -64,7 +63,7 @@ struct MenuBarView: View {
         }
         
         // Append unnumbered profiles sorted by creation date
-        return sortedNumbered + unnumberedProfiles.sorted { $0.createdDate ?? Date.distantPast < $1.createdDate ?? Date.distantPast }
+        return sortedNumbered + unnumberedProfiles.sorted { $0.createdAt < $1.createdAt }
     }
     
     var body: some View {
@@ -85,10 +84,11 @@ struct MenuBarView: View {
         Divider()
         
         // Bindings - use profile's numberOrder or fall back to default
-        let numberOrder = profileManager.currentProfile.numberOrder ?? defaultNumberOrder
+        let currentProfile = profileManager.currentProfile
+        let numberOrder = currentProfile?.numberOrder ?? defaultNumberOrder
         ForEach(Array(stride(from: 0, through: 9, by: 1)), id: \.self) { i in
             let number = getNumber(for: i, order: numberOrder)
-            if let binding = profileManager.currentProfile[number] {
+            if let binding = profileManager.application(for: number, in: currentProfile) {
                 if modifierManager.activateEnabled {
                     Button("\(binding.title)") {
                         binding.focus()
