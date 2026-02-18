@@ -1,1 +1,14 @@
-
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>Reef</title>
+        <item>
+            <title>1.1</title>
+            <pubDate>Tue, 17 Feb 2026 23:18:08 -0500</pubDate>
+            <sparkle:version>2</sparkle:version>
+            <sparkle:shortVersionString>1.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.6</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/gouwsxander/Reef/releases/download/1.1/Reef.zip" length="3277191" type="application/octet-stream" sparkle:edSignature="Ittz+8LrasiJ5WSIeMzElHW8EeITB2gkcCp+LIou91Co+OfsmC7LCpNwp3Hwvp+kz4WcC1blPELGn7BiUE6XAw=="/>
+        </item>
+    </channel>
+</rss>
