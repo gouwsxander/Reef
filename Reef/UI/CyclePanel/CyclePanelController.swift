@@ -63,7 +63,7 @@ final class CyclePanelController: NSObject {
         updatePanelSize()
         
         // If starting index is provided (e.g., already on that app), use it
-        if startIndex > 0 && startIndex < state.windows.count {
+        if startIndex > 0 && startIndex < state.items.count {
             state.selectedIndex = startIndex
         }
         
@@ -77,9 +77,9 @@ final class CyclePanelController: NSObject {
     }
 
     private func updatePanelSize() {
-        let windowCount = state.windows.count
-        let rowsHeight = CGFloat(windowCount) * rowHeight
-        let spacingHeight = CGFloat(max(0, windowCount - 1)) * rowSpacing
+        let itemCount = state.items.count
+        let rowsHeight = CGFloat(itemCount) * rowHeight
+        let spacingHeight = CGFloat(max(0, itemCount - 1)) * rowSpacing
         let listHeight = rowsHeight + spacingHeight + (listVerticalPadding * 2)
         let desiredContentHeight = headerHeight + dividerHeight + listHeight
 
@@ -113,13 +113,31 @@ final class CyclePanelController: NSObject {
     
     // Called when user releases Ctrl
     func activateSelectedWindow() {
-        guard let window = state.currentWindow else {
+        guard let item = state.currentItem else {
             hideSwitcher()
             return
         }
         
-        window.focus()
-        hideSwitcher()
+        switch item {
+        case .window(let window):
+            window.focus()
+            hideSwitcher()
+        case .action:
+            let application = currentApplication
+            hideSwitcher()
+            
+            Task { @MainActor in
+                guard let application else {
+                    NSSound.beep()
+                    return
+                }
+                
+                let success = await application.performNoWindowAction()
+                if !success {
+                    NSSound.beep()
+                }
+            }
+        }
     }
     
     private func hideSwitcher() {

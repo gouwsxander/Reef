@@ -10,6 +10,9 @@ import Cocoa
 
 
 class Application {
+    private static let openWindowPollIntervalNanoseconds: UInt64 = 50_000_000
+    private static let openWindowPollAttempts: Int = 30
+    
     var title: String
     var element: AXUIElement?
 
@@ -100,10 +103,13 @@ class Application {
     func focus() {
         self.activate()
     }
+    
+    var isRunning: Bool {
+        refreshRunningApplication() != nil
+    }
 
     func activate(options: NSApplication.ActivationOptions = []) {
-        if let runningApplication = self.runningApplication,
-           runningApplication.isTerminated == false {
+        if let runningApplication = refreshRunningApplication() {
             // App is running, just activate it
             runningApplication.activate(options: options)
         } else {
@@ -134,27 +140,66 @@ class Application {
         return nil
     }
     
-    func reopen() throws {
+    func reopen(
+        configuration: NSWorkspace.OpenConfiguration = Application.defaultOpenConfiguration(),
+        completion: @escaping (Result<NSRunningApplication, Error>) -> Void
+    ) throws {
         guard let bundleUrl = self.bundleUrl else {
             throw ApplicationError.noBundleURL
-        }
-        
-        let configuration = NSWorkspace.OpenConfiguration()
-        configuration.activates = true
-        
-        let completionHandler: (NSRunningApplication?, Error?) -> Void = { runningApplication, error in
-            if let runningApplication = runningApplication {
-                self.runningApplication = runningApplication
-                self.pid = runningApplication.processIdentifier
-                self.element = AXUIElementCreateApplication(self.pid!)
-            }
         }
         
         NSWorkspace.shared.openApplication(
             at: bundleUrl,
             configuration: configuration,
-            completionHandler: completionHandler
+            completionHandler: { runningApplication, error in
+                if let runningApplication {
+                    self.setRunningApplication(runningApplication)
+                    completion(.success(runningApplication))
+                    return
+                }
+                
+                completion(.failure(error ?? ApplicationError.openFailed))
+            }
         )
+    }
+    
+    func reopen(
+        configuration: NSWorkspace.OpenConfiguration = Application.defaultOpenConfiguration()
+    ) async throws -> NSRunningApplication {
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try reopen(configuration: configuration) { result in
+                    continuation.resume(with: result)
+                }
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
+    }
+    
+    func reopen() throws {
+        try reopen(configuration: Self.defaultOpenConfiguration()) { _ in }
+    }
+    
+    func performNoWindowAction() async -> Bool {
+        if let existingWindow = getWindows().first {
+            existingWindow.focus()
+            return true
+        }
+        
+        do {
+            // A foreground reopen is more reliable for apps that only create a window when active.
+            _ = try await reopen(configuration: Self.defaultOpenConfiguration(activates: true))
+        } catch {
+            return false
+        }
+        
+        guard let window = await waitForWindowInCurrentSpace() else {
+            return false
+        }
+        
+        window.focus()
+        return true
     }
     
     static func getFrontApplication() -> Application? {
@@ -217,9 +262,66 @@ class Application {
         
         return attributes
     }
+    
+    @discardableResult
+    private func refreshRunningApplication() -> NSRunningApplication? {
+        if let runningApplication,
+           runningApplication.isTerminated == false {
+            return runningApplication
+        }
+        
+        guard let bundleIdentifier else {
+            setRunningApplication(nil)
+            return nil
+        }
+        
+        guard let detectedRunningApp = NSRunningApplication
+            .runningApplications(withBundleIdentifier: bundleIdentifier)
+            .first
+        else {
+            setRunningApplication(nil)
+            return nil
+        }
+        
+        setRunningApplication(detectedRunningApp)
+        return detectedRunningApp
+    }
+    
+    private func setRunningApplication(_ runningApplication: NSRunningApplication?) {
+        self.runningApplication = runningApplication
+        
+        if let runningApplication {
+            self.pid = runningApplication.processIdentifier
+            self.element = AXUIElementCreateApplication(runningApplication.processIdentifier)
+            self.title = runningApplication.localizedName ?? self.title
+            return
+        }
+        
+        self.pid = nil
+        self.element = nil
+    }
+    
+    private static func defaultOpenConfiguration(activates: Bool = true) -> NSWorkspace.OpenConfiguration {
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = activates
+        return configuration
+    }
+    
+    private func waitForWindowInCurrentSpace() async -> Window? {
+        for _ in 0..<Self.openWindowPollAttempts {
+            if let window = getWindows().first {
+                return window
+            }
+            
+            try? await Task.sleep(nanoseconds: Self.openWindowPollIntervalNanoseconds)
+        }
+        
+        return getWindows().first
+    }
 }
 
 
 enum ApplicationError: Error {
     case noBundleURL
+    case openFailed
 }
