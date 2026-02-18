@@ -72,52 +72,43 @@ class Application {
         return nil
     }
     
-    // Ensure application is running and refresh internal state
-    func ensureRunning() -> Bool {
-        guard let bundleUrl = self.bundleUrl else {
-            return false
-        }
-        
-        // Check if already running
-        if let runningApp = self.runningApplication,
-           runningApp.isTerminated == false {
-            return true
-        }
-        
-        // Try to find if it's running but we lost the reference
-        if let bundle = Bundle(url: bundleUrl),
-           let bundleIdentifier = bundle.bundleIdentifier,
-           let runningApp = NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier).first {
-            self.runningApplication = runningApp
-            self.pid = runningApp.processIdentifier
-            self.element = AXUIElementCreateApplication(self.pid!)
-            return true
-        }
-        
-        return false
-    }
+//    // Ensure application is running and refresh internal state
+//    func ensureRunning() -> Bool {
+//        guard let bundleUrl = self.bundleUrl else {
+//            return false
+//        }
+//        
+//        // Check if already running
+//        if let runningApp = self.runningApplication,
+//           runningApp.isTerminated == false {
+//            return true
+//        }
+//        
+//        // Try to find if it's running but we lost the reference
+//        if let bundle = Bundle(url: bundleUrl),
+//           let bundleIdentifier = bundle.bundleIdentifier,
+//           let runningApp = NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier).first {
+//            self.runningApplication = runningApp
+//            self.pid = runningApp.processIdentifier
+//            self.element = AXUIElementCreateApplication(self.pid!)
+//            return true
+//        }
+//        
+//        return false
+//    }
     
     func focus() {
-        // Centralize relaunch logic here so callers don't need to care
-        // whether the bound application is still running.
-        if self.runningApplication?.isTerminated == true {
-            try? self.reopen()
-            return
-        }
-        
-        // If activation fails (can happen if the process is exiting), relaunch.
-        if self.runningApplication?.activate(options: []) == false {
-            try? self.reopen()
-        }
+        self.activate()
     }
 
     func activate(options: NSApplication.ActivationOptions = []) {
-        if !ensureRunning() {
+        if let runningApplication = self.runningApplication,
+           runningApplication.isTerminated == false {
+            // App is running, just activate it
+            runningApplication.activate(options: options)
+        } else {
             // App not running, launch it
             try? reopen()
-        } else {
-            // App is running, just activate it
-            self.runningApplication?.activate(options: options)
         }
     }
     
