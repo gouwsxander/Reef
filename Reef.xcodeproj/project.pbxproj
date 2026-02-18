@@ -216,6 +216,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				C0A713C82E749493005B3639 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
+				629AF8F32F454B37003B5679 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C0DA3E342E74664400F50FB1 /* Products */;
@@ -625,6 +626,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		629AF8F32F454B37003B5679 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.8.1;
+			};
+		};
 		C0A713C82E749493005B3639 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
