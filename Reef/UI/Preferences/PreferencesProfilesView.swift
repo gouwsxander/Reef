@@ -61,12 +61,6 @@ struct PreferencesProfilesView: View {
                     }
                     .tag(profile.id)
                 }
-                .onChange(of: selectedProfileID) { _, newID in
-                    if let newID = newID,
-                       let profile = sortedProfiles.first(where: { $0.id == newID }) {
-                        profileManager.switchProfile(profile)
-                    }
-                }
                 
                 Divider()
                 
