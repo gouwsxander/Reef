@@ -19,7 +19,7 @@ struct PreferencesView: View {
             PreferencesShortcutsView()
                 .tabItem { Label("Shortcuts", systemImage: "command") }
         }
-        .frame(width: 600)
+        .frame(width: 650)
     }
 }
 
