@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		629AF8F62F4550F8003B5679 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 629AF8F52F4550F8003B5679 /* Sparkle */; };
 		C0A713CA2E749493005B3639 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = C0A713C92E749493005B3639 /* KeyboardShortcuts */; };
 /* End PBXBuildFile section */
 
@@ -70,6 +71,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C0A713CA2E749493005B3639 /* KeyboardShortcuts in Frameworks */,
+				629AF8F62F4550F8003B5679 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -90,12 +92,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		629AF8F42F4550F8003B5679 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		C0DA3E2A2E74664400F50FB1 = {
 			isa = PBXGroup;
 			children = (
 				C0DA3E352E74664400F50FB1 /* Reef */,
 				C0DA3E472E74664500F50FB1 /* ReefTests */,
 				C0DA3E512E74664500F50FB1 /* ReefUITests */,
+				629AF8F42F4550F8003B5679 /* Frameworks */,
 				C0DA3E342E74664400F50FB1 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -131,6 +141,7 @@
 			name = Reef;
 			packageProductDependencies = (
 				C0A713C92E749493005B3639 /* KeyboardShortcuts */,
+				629AF8F52F4550F8003B5679 /* Sparkle */,
 			);
 			productName = Reef;
 			productReference = C0DA3E332E74664400F50FB1 /* Reef.app */;
@@ -645,6 +656,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		629AF8F52F4550F8003B5679 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 629AF8F32F454B37003B5679 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
 		C0A713C92E749493005B3639 /* KeyboardShortcuts */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = C0A713C82E749493005B3639 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
