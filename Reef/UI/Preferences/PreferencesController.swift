@@ -9,6 +9,8 @@ import SwiftUI
 
 @MainActor
 class PreferencesController {
+    static let settingsWindowIdentifier = NSUserInterfaceItemIdentifier("Reef.SettingsWindow")
+    
     init() {
         setupWindowObserver()
     }
@@ -30,19 +32,29 @@ class PreferencesController {
     }
     
     private func isSettingsWindow(_ window: NSWindow) -> Bool {
-        let windowClass = String(describing: type(of: window))
-        return windowClass.contains("AppKitWindow") && window.title == "General"
+        Self.isLikelySettingsWindow(window)
     }
     
     private func configureSettingsWindow(_ window: NSWindow) {
-        // Allow window to appear on all spaces
-        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        // Keep settings on the current Space and move it to the active one when reopened.
+        window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
         
-        // Float above other windows
+        // Keep standard window ordering; only force focus when opening settings.
         window.level = .floating
+        window.identifier = Self.settingsWindowIdentifier
         
         // Bring to front
         NSApp.activate(ignoringOtherApps: true)
+        window.orderFrontRegardless()
         window.makeKeyAndOrderFront(nil)
+    }
+    
+    static func isLikelySettingsWindow(_ window: NSWindow) -> Bool {
+        if window.identifier == settingsWindowIdentifier {
+            return true
+        }
+        
+        let windowClass = String(describing: type(of: window))
+        return windowClass.contains("AppKitWindow")
     }
 }

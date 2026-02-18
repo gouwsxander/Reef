@@ -21,6 +21,8 @@ struct MenuBarView: View {
         return ModifierManager()
     }()
     
+    private let settingsWindowIdentifier = NSUserInterfaceItemIdentifier("Reef.SettingsWindow")
+    
     // Helper function to get number based on order preference
     private func getNumber(for index: Int, order: String) -> Int {
         if order == "rightHanded" {
@@ -66,6 +68,41 @@ struct MenuBarView: View {
         return sortedNumbered + unnumberedProfiles.sorted { $0.createdAt < $1.createdAt }
     }
     
+    private func isLikelySettingsWindow(_ window: NSWindow) -> Bool {
+        if window.identifier == settingsWindowIdentifier {
+            return true
+        }
+        
+        let windowClass = String(describing: type(of: window))
+        return windowClass.contains("AppKitWindow")
+    }
+    
+    private func bringSettingsWindowToFrontIfPresent() -> Bool {
+        guard let settingsWindow = NSApp.windows.first(where: { isLikelySettingsWindow($0) }) else {
+            return false
+        }
+        
+        NSApp.activate(ignoringOtherApps: true)
+        settingsWindow.orderFrontRegardless()
+        settingsWindow.makeKeyAndOrderFront(nil)
+        return true
+    }
+    
+    private func openPreferencesWindow() {
+        NSApp.activate(ignoringOtherApps: true)
+        openSettings()
+        
+        Task { @MainActor in
+            for _ in 0..<6 {
+                if bringSettingsWindowToFrontIfPresent() {
+                    return
+                }
+                
+                try? await Task.sleep(nanoseconds: 50_000_000)
+            }
+        }
+    }
+    
     var body: some View {
         // Profiles
         ForEach(sortedProfiles) { profile in
@@ -105,7 +142,7 @@ struct MenuBarView: View {
         Divider()
         
         Button("Preferences...") {
-            openSettings()
+            openPreferencesWindow()
         }
         
         Button("About Reef") {
