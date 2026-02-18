@@ -104,23 +104,9 @@ struct MenuBarView: View {
     }
     
     var body: some View {
-        // Profiles
-        ForEach(sortedProfiles) { profile in
-            if modifierManager.profileEnabled, let profileNumber = profile.profileNumber {
-                Button(profile.name) {
-                    profileManager.switchProfile(profile)
-                }
-                .keyboardShortcut(KeyEquivalent(Character("\(profileNumber)")), modifiers: modifierManager.profileEventModifiers)
-            } else {
-                Button(profile.name) {
-                    profileManager.switchProfile(profile)
-                }
-            }
-        }
+        Text("Applications")
         
-        Divider()
-        
-        // Bindings - use profile's numberOrder or fall back to default
+        // Bindings - use current profile's numberOrder or fall back to default
         let currentProfile = profileManager.currentProfile
         let numberOrder = currentProfile?.numberOrder ?? defaultNumberOrder
         ForEach(Array(stride(from: 0, through: 9, by: 1)), id: \.self) { i in
@@ -135,6 +121,23 @@ struct MenuBarView: View {
                     Button("\(binding.title)") {
                         binding.focus()
                     }
+                }
+            }
+        }
+        
+        Divider()
+        
+        Text("Profiles")
+        
+        ForEach(sortedProfiles) { profile in
+            if modifierManager.profileEnabled, let profileNumber = profile.profileNumber {
+                Button(profile.name) {
+                    profileManager.switchProfile(profile)
+                }
+                .keyboardShortcut(KeyEquivalent(Character("\(profileNumber)")), modifiers: modifierManager.profileEventModifiers)
+            } else {
+                Button(profile.name) {
+                    profileManager.switchProfile(profile)
                 }
             }
         }
