@@ -10,9 +10,6 @@ import Cocoa
 
 
 class Application {
-    private static let openWindowPollIntervalNanoseconds: UInt64 = 50_000_000
-    private static let openWindowPollAttempts: Int = 30
-    
     var title: String
     var element: AXUIElement?
 
@@ -187,19 +184,18 @@ class Application {
             return true
         }
         
+        // Official fallback: if the app is already running, just focus/activate it.
+        if isRunning {
+            activate()
+            return true
+        }
+        
         do {
-            // A foreground reopen is more reliable for apps that only create a window when active.
             _ = try await reopen(configuration: Self.defaultOpenConfiguration(activates: true))
+            return true
         } catch {
             return false
         }
-        
-        guard let window = await waitForWindowInCurrentSpace() else {
-            return false
-        }
-        
-        window.focus()
-        return true
     }
     
     static func getFrontApplication() -> Application? {
@@ -315,17 +311,6 @@ class Application {
         return configuration
     }
     
-    private func waitForWindowInCurrentSpace() async -> Window? {
-        for _ in 0..<Self.openWindowPollAttempts {
-            if let window = getWindows().first {
-                return window
-            }
-            
-            try? await Task.sleep(nanoseconds: Self.openWindowPollIntervalNanoseconds)
-        }
-        
-        return getWindows().first
-    }
 }
 
 
