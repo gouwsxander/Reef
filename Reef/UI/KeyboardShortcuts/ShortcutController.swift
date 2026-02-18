@@ -77,9 +77,14 @@ final class ShortcutController {
             return
         }
         
-        // If panel is already visible, cycle to next window
+        // If panel is already visible, cycle if same app; otherwise switch to the newly requested app.
         if cycleController.panel.isVisible {
-            cycleController.cycleNext()
+            if cycleController.isShowingSwitcher(for: binding) {
+                cycleController.cycleNext()
+            } else {
+                cycleController.showSwitcher(for: binding)
+            }
+            
             return
         }
 

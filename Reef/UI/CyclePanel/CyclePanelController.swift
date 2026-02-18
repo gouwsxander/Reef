@@ -16,6 +16,7 @@ final class CyclePanelController: NSObject {
     private var flagsMonitor: Any?
     private var keyDownMonitor: Any?
     private var currentApplication: Application?
+    private var panelAnchorCenter: CGPoint?
 
     private let panelContentWidth: CGFloat = 400
     private let maxPanelFrameHeightCap: CGFloat = 520
@@ -59,8 +60,6 @@ final class CyclePanelController: NSObject {
     func showSwitcher(for application: Application, startIndex: Int = 0) {
         currentApplication = application
         state.setApplication(application)
-
-        updatePanelSize()
         
         // If starting index is provided (e.g., already on that app), use it
         if startIndex > 0 && startIndex < state.items.count {
@@ -69,10 +68,17 @@ final class CyclePanelController: NSObject {
         
         if !panel.isVisible {
             panel.center()
+            panelAnchorCenter = CGPoint(x: panel.frame.midX, y: panel.frame.midY)
+            updatePanelSize()
             panel.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
             installFlagsMonitor()
             installKeyDownMonitor()
+        } else {
+            if panelAnchorCenter == nil {
+                panelAnchorCenter = CGPoint(x: panel.frame.midX, y: panel.frame.midY)
+            }
+            updatePanelSize()
         }
     }
 
@@ -94,21 +100,36 @@ final class CyclePanelController: NSObject {
         let targetContentRect = NSRect(x: 0, y: 0, width: panelContentWidth, height: clampedContentHeight)
         let targetFrameSize = panel.frameRect(forContentRect: targetContentRect).size
 
-        // Keep the panel centered while resizing.
-        let currentFrame = panel.frame
-        let center = CGPoint(x: currentFrame.midX, y: currentFrame.midY)
+        // Keep the panel pinned to the same center while Ctrl is held.
+        let center = panelAnchorCenter ?? CGPoint(x: panel.frame.midX, y: panel.frame.midY)
         let newOrigin = CGPoint(
             x: center.x - targetFrameSize.width / 2,
             y: center.y - targetFrameSize.height / 2
         )
         let newFrame = NSRect(origin: newOrigin, size: targetFrameSize)
 
-        panel.setFrame(newFrame, display: true, animate: panel.isVisible)
+        panel.setFrame(newFrame, display: true, animate: false)
     }
     
     // Called when user presses Ctrl+[number] again while panel is visible
     func cycleNext() {
         state.cycleNext()
+    }
+    
+    func isShowingSwitcher(for application: Application) -> Bool {
+        guard let currentApplication else { return false }
+        
+        if let currentBundleID = currentApplication.bundleIdentifier,
+           let targetBundleID = application.bundleIdentifier {
+            return currentBundleID == targetBundleID
+        }
+        
+        if let currentURL = currentApplication.bundleUrl,
+           let targetURL = application.bundleUrl {
+            return currentURL == targetURL
+        }
+        
+        return currentApplication.title == application.title
     }
     
     // Called when user releases Ctrl
@@ -146,6 +167,7 @@ final class CyclePanelController: NSObject {
         panel.orderOut(nil)
         state.reset()
         currentApplication = nil
+        panelAnchorCenter = nil
     }
     
     private func installFlagsMonitor() {
