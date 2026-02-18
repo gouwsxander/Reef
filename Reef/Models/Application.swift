@@ -242,10 +242,18 @@ class Application {
     
     func getWindows() -> [Window] {
         let axWindows = self.getAXWindows()
-        
-        return axWindows.map { axWindow in
+        var windows = axWindows.map { axWindow in
             Window(axWindow, self)
         }
+        
+        // Finder can expose a trailing generic "Finder" window that is not useful for switching.
+        if bundleIdentifier == "com.apple.finder",
+           let lastWindow = windows.last,
+           lastWindow.title == "Finder" {
+            windows.removeLast()
+        }
+        
+        return windows
     }
     
     func listAvailableAttributes() -> [String] {
