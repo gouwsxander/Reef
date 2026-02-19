@@ -108,7 +108,8 @@ struct MenuBarView: View {
         Button("Check for Updates") {
             sparkleConnector.checkForUpdates()
         }
-        
+        .disabled(!sparkleConnector.canCheckForUpdates)
+
         Button("Preferences...") {
             openSettings()
         }
