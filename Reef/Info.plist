@@ -4,5 +4,9 @@
 <dict>
 	<key>CFBundleIconFile</key>
 	<string>reef_placeholder</string>
+	<key>SUPublicEDKey</key>
+	<string>ZbMve8wfUSQghxEPXBhrQsQlI0zlkswHqeUJD1B0lFc=</string>
+	<key>SUFeedURL</key>
+	<string>https://gouwsxander.github.io/Reef/appcast.xml</string>
 </dict>
 </plist>
