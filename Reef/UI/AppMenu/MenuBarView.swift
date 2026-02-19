@@ -145,7 +145,7 @@ struct MenuBarView: View {
         
         Divider()
 
-        Button("Check for Updates") {
+        Button("Check for updates...") {
             sparkleConnector.checkForUpdates()
         }
         .disabled(!sparkleConnector.canCheckForUpdates)
