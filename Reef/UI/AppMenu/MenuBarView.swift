@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MenuBarView: View {
     @EnvironmentObject var profileManager: ProfileManager
+    @EnvironmentObject var sparkleConnector: SparkleConnector
     private var profiles: [Profile] { profileManager.profiles }
     
     @Environment(\.openSettings) private var openSettings
@@ -143,7 +144,12 @@ struct MenuBarView: View {
         }
         
         Divider()
-        
+
+        Button("Check for Updates") {
+            sparkleConnector.checkForUpdates()
+        }
+        .disabled(!sparkleConnector.canCheckForUpdates)
+
         Button("Preferences...") {
             openPreferencesWindow()
         }

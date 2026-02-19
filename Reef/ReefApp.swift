@@ -13,6 +13,7 @@ import ServiceManagement
 struct ReefApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var profileManager: ProfileManager
+    @StateObject private var sparkleConnector = SparkleConnector()
     @AppStorage("launchOnLogin") private var launchOnLogin = true
     
     init() {
@@ -31,6 +32,7 @@ struct ReefApp: App {
         Settings {
             PreferencesView()
                 .environmentObject(profileManager)
+                .environmentObject(sparkleConnector)
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
@@ -38,6 +40,7 @@ struct ReefApp: App {
         MenuBarExtra {
             MenuBarView()
                 .environmentObject(profileManager)
+                .environmentObject(sparkleConnector)
         } label: {
             Image("menu_placeholder")
             // Image(systemName: "fish.fill")
