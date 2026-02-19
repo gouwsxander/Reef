@@ -13,6 +13,15 @@ struct CyclePanelView: View {
     private let headerPadding: Double = 12
     private let maxNonScrollingRows: Int = 5
     
+    private func itemTitle(_ item: CyclePanelItem) -> String {
+        switch item {
+        case .window(let window):
+            return window.title
+        case .action(let action):
+            return action.title
+        }
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -27,11 +36,11 @@ struct CyclePanelView: View {
                 .background(Color.white.opacity(0.2))
             
             // Window list
-            if state.windows.count <= maxNonScrollingRows {
+            if state.items.count <= maxNonScrollingRows {
                 VStack(spacing: 4) {
-                    ForEach(Array(state.windows.enumerated()), id: \.element.id) { index, window in
+                    ForEach(Array(state.items.enumerated()), id: \.offset) { index, item in
                         CyclePanelRow(
-                            title: window.title,
+                            title: itemTitle(item),
                             isSelected: index == state.selectedIndex
                         )
                         .id(index)
@@ -42,9 +51,9 @@ struct CyclePanelView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         VStack(spacing: 4) {
-                            ForEach(Array(state.windows.enumerated()), id: \.element.id) { index, window in
+                            ForEach(Array(state.items.enumerated()), id: \.offset) { index, item in
                                 CyclePanelRow(
-                                    title: window.title,
+                                    title: itemTitle(item),
                                     isSelected: index == state.selectedIndex
                                 )
                                 .id(index)

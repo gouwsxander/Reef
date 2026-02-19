@@ -72,52 +72,46 @@ class Application {
         return nil
     }
     
-    // Ensure application is running and refresh internal state
-    func ensureRunning() -> Bool {
-        guard let bundleUrl = self.bundleUrl else {
-            return false
-        }
-        
-        // Check if already running
-        if let runningApp = self.runningApplication,
-           runningApp.isTerminated == false {
-            return true
-        }
-        
-        // Try to find if it's running but we lost the reference
-        if let bundle = Bundle(url: bundleUrl),
-           let bundleIdentifier = bundle.bundleIdentifier,
-           let runningApp = NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier).first {
-            self.runningApplication = runningApp
-            self.pid = runningApp.processIdentifier
-            self.element = AXUIElementCreateApplication(self.pid!)
-            return true
-        }
-        
-        return false
-    }
+//    // Ensure application is running and refresh internal state
+//    func ensureRunning() -> Bool {
+//        guard let bundleUrl = self.bundleUrl else {
+//            return false
+//        }
+//        
+//        // Check if already running
+//        if let runningApp = self.runningApplication,
+//           runningApp.isTerminated == false {
+//            return true
+//        }
+//        
+//        // Try to find if it's running but we lost the reference
+//        if let bundle = Bundle(url: bundleUrl),
+//           let bundleIdentifier = bundle.bundleIdentifier,
+//           let runningApp = NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier).first {
+//            self.runningApplication = runningApp
+//            self.pid = runningApp.processIdentifier
+//            self.element = AXUIElementCreateApplication(self.pid!)
+//            return true
+//        }
+//        
+//        return false
+//    }
     
     func focus() {
-        // Centralize relaunch logic here so callers don't need to care
-        // whether the bound application is still running.
-        if self.runningApplication?.isTerminated == true {
-            try? self.reopen()
-            return
-        }
-        
-        // If activation fails (can happen if the process is exiting), relaunch.
-        if self.runningApplication?.activate(options: []) == false {
-            try? self.reopen()
-        }
+        self.activate()
+    }
+    
+    var isRunning: Bool {
+        refreshRunningApplication() != nil
     }
 
     func activate(options: NSApplication.ActivationOptions = []) {
-        if !ensureRunning() {
+        if let runningApplication = refreshRunningApplication() {
+            // App is running, just activate it
+            runningApplication.activate(options: options)
+        } else {
             // App not running, launch it
             try? reopen()
-        } else {
-            // App is running, just activate it
-            self.runningApplication?.activate(options: options)
         }
     }
     
@@ -143,27 +137,65 @@ class Application {
         return nil
     }
     
-    func reopen() throws {
+    func reopen(
+        configuration: NSWorkspace.OpenConfiguration = Application.defaultOpenConfiguration(),
+        completion: @escaping (Result<NSRunningApplication, Error>) -> Void
+    ) throws {
         guard let bundleUrl = self.bundleUrl else {
             throw ApplicationError.noBundleURL
-        }
-        
-        let configuration = NSWorkspace.OpenConfiguration()
-        configuration.activates = true
-        
-        let completionHandler: (NSRunningApplication?, Error?) -> Void = { runningApplication, error in
-            if let runningApplication = runningApplication {
-                self.runningApplication = runningApplication
-                self.pid = runningApplication.processIdentifier
-                self.element = AXUIElementCreateApplication(self.pid!)
-            }
         }
         
         NSWorkspace.shared.openApplication(
             at: bundleUrl,
             configuration: configuration,
-            completionHandler: completionHandler
+            completionHandler: { runningApplication, error in
+                if let runningApplication {
+                    self.setRunningApplication(runningApplication)
+                    completion(.success(runningApplication))
+                    return
+                }
+                
+                completion(.failure(error ?? ApplicationError.openFailed))
+            }
         )
+    }
+    
+    func reopen(
+        configuration: NSWorkspace.OpenConfiguration = Application.defaultOpenConfiguration()
+    ) async throws -> NSRunningApplication {
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try reopen(configuration: configuration) { result in
+                    continuation.resume(with: result)
+                }
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
+    }
+    
+    func reopen() throws {
+        try reopen(configuration: Self.defaultOpenConfiguration()) { _ in }
+    }
+    
+    func performNoWindowAction() async -> Bool {
+        if let existingWindow = getWindows().first {
+            existingWindow.focus()
+            return true
+        }
+        
+        // Official fallback: if the app is already running, just focus/activate it.
+        if isRunning {
+            activate()
+            return true
+        }
+        
+        do {
+            _ = try await reopen(configuration: Self.defaultOpenConfiguration(activates: true))
+            return true
+        } catch {
+            return false
+        }
     }
     
     static func getFrontApplication() -> Application? {
@@ -206,10 +238,18 @@ class Application {
     
     func getWindows() -> [Window] {
         let axWindows = self.getAXWindows()
-        
-        return axWindows.map { axWindow in
+        var windows = axWindows.map { axWindow in
             Window(axWindow, self)
         }
+        
+        // Finder can expose a trailing generic "Finder" window that is not useful for switching.
+        if bundleIdentifier == "com.apple.finder",
+           let lastWindow = windows.last,
+           lastWindow.title == "Finder" {
+            windows.removeLast()
+        }
+        
+        return windows
     }
     
     func listAvailableAttributes() -> [String] {
@@ -226,9 +266,55 @@ class Application {
         
         return attributes
     }
+    
+    @discardableResult
+    private func refreshRunningApplication() -> NSRunningApplication? {
+        if let runningApplication,
+           runningApplication.isTerminated == false {
+            return runningApplication
+        }
+        
+        guard let bundleIdentifier else {
+            setRunningApplication(nil)
+            return nil
+        }
+        
+        guard let detectedRunningApp = NSRunningApplication
+            .runningApplications(withBundleIdentifier: bundleIdentifier)
+            .first
+        else {
+            setRunningApplication(nil)
+            return nil
+        }
+        
+        setRunningApplication(detectedRunningApp)
+        return detectedRunningApp
+    }
+    
+    private func setRunningApplication(_ runningApplication: NSRunningApplication?) {
+        self.runningApplication = runningApplication
+        
+        if let runningApplication {
+            self.pid = runningApplication.processIdentifier
+            self.element = AXUIElementCreateApplication(runningApplication.processIdentifier)
+            self.title = runningApplication.localizedName ?? self.title
+            return
+        }
+        
+        self.pid = nil
+        self.element = nil
+    }
+    
+    private static func defaultOpenConfiguration(activates: Bool = true) -> NSWorkspace.OpenConfiguration {
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = activates
+        return configuration
+    }
+    
 }
 
 
 enum ApplicationError: Error {
     case noBundleURL
+    case openFailed
 }

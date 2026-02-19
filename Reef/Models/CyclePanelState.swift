@@ -7,31 +7,87 @@
 
 import Foundation
 
+enum CyclePanelAction {
+    case launchApp
+    case openWindow
+    
+    var title: String {
+        switch self {
+        case .launchApp:
+            return "Launch app"
+        case .openWindow:
+            return "Focus app"
+        }
+    }
+}
+
+enum CyclePanelItem {
+    case window(Window)
+    case action(CyclePanelAction)
+}
 
 @MainActor
 final class CyclePanelState: ObservableObject {
     @Published var applicationTitle: String = ""
-    @Published var windows: [Window] = []
+    @Published var items: [CyclePanelItem] = []
     @Published var selectedIndex: Int = 0
     
+    var windows: [Window] {
+        items.compactMap { item in
+            if case let .window(window) = item {
+                return window
+            }
+            
+            return nil
+        }
+    }
+    
+    var currentItem: CyclePanelItem? {
+        guard !items.isEmpty, selectedIndex < items.count else { return nil }
+        return items[selectedIndex]
+    }
+    
     var currentWindow: Window? {
-        guard !windows.isEmpty, selectedIndex < windows.count else { return nil }
-        return windows[selectedIndex]
+        guard let currentItem else { return nil }
+        
+        if case let .window(window) = currentItem {
+            return window
+        }
+        
+        return nil
+    }
+    
+    var currentAction: CyclePanelAction? {
+        guard let currentItem else { return nil }
+        
+        if case let .action(action) = currentItem {
+            return action
+        }
+        
+        return nil
     }
     
     func setApplication(_ application: Application) {
         self.applicationTitle = application.title
-        self.windows = application.getWindows()
+        
+        let windows = application.getWindows()
+        if windows.isEmpty {
+            let action: CyclePanelAction = application.isRunning ? .openWindow : .launchApp
+            self.items = [.action(action)]
+        } else {
+            self.items = windows.map(CyclePanelItem.window)
+        }
+        
         self.selectedIndex = 0
     }
     
     func cycleNext() {
-        guard !windows.isEmpty else { return }
-        selectedIndex = (selectedIndex + 1) % windows.count
+        guard !items.isEmpty else { return }
+        selectedIndex = (selectedIndex + 1) % items.count
     }
     
     func reset() {
-        windows = []
+        items = []
         selectedIndex = 0
         applicationTitle = ""
     }

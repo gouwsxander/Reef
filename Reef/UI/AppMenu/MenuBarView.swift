@@ -22,6 +22,8 @@ struct MenuBarView: View {
         return ModifierManager()
     }()
     
+    private let settingsWindowIdentifier = NSUserInterfaceItemIdentifier("Reef.SettingsWindow")
+    
     // Helper function to get number based on order preference
     private func getNumber(for index: Int, order: String) -> Int {
         if order == "rightHanded" {
@@ -67,24 +69,45 @@ struct MenuBarView: View {
         return sortedNumbered + unnumberedProfiles.sorted { $0.createdAt < $1.createdAt }
     }
     
-    var body: some View {
-        // Profiles
-        ForEach(sortedProfiles) { profile in
-            if modifierManager.profileEnabled, let profileNumber = profile.profileNumber {
-                Button(profile.name) {
-                    profileManager.switchProfile(profile)
-                }
-                .keyboardShortcut(KeyEquivalent(Character("\(profileNumber)")), modifiers: modifierManager.profileEventModifiers)
-            } else {
-                Button(profile.name) {
-                    profileManager.switchProfile(profile)
-                }
-            }
+    private func isLikelySettingsWindow(_ window: NSWindow) -> Bool {
+        if window.identifier == settingsWindowIdentifier {
+            return true
         }
         
-        Divider()
+        let windowClass = String(describing: type(of: window))
+        return windowClass.contains("AppKitWindow")
+    }
+    
+    private func bringSettingsWindowToFrontIfPresent() -> Bool {
+        guard let settingsWindow = NSApp.windows.first(where: { isLikelySettingsWindow($0) }) else {
+            return false
+        }
         
-        // Bindings - use profile's numberOrder or fall back to default
+        NSApp.activate(ignoringOtherApps: true)
+        settingsWindow.orderFrontRegardless()
+        settingsWindow.makeKeyAndOrderFront(nil)
+        return true
+    }
+    
+    private func openPreferencesWindow() {
+        NSApp.activate(ignoringOtherApps: true)
+        openSettings()
+        
+        Task { @MainActor in
+            for _ in 0..<6 {
+                if bringSettingsWindowToFrontIfPresent() {
+                    return
+                }
+                
+                try? await Task.sleep(nanoseconds: 50_000_000)
+            }
+        }
+    }
+    
+    var body: some View {
+        Text("Applications")
+        
+        // Bindings - use current profile's numberOrder or fall back to default
         let currentProfile = profileManager.currentProfile
         let numberOrder = currentProfile?.numberOrder ?? defaultNumberOrder
         ForEach(Array(stride(from: 0, through: 9, by: 1)), id: \.self) { i in
@@ -104,14 +127,31 @@ struct MenuBarView: View {
         }
         
         Divider()
+        
+        Text("Profiles")
+        
+        ForEach(sortedProfiles) { profile in
+            if modifierManager.profileEnabled, let profileNumber = profile.profileNumber {
+                Button(profile.name) {
+                    profileManager.switchProfile(profile)
+                }
+                .keyboardShortcut(KeyEquivalent(Character("\(profileNumber)")), modifiers: modifierManager.profileEventModifiers)
+            } else {
+                Button(profile.name) {
+                    profileManager.switchProfile(profile)
+                }
+            }
+        }
+        
+        Divider()
 
-        Button("Check for Updates") {
+        Button("Check for updates...") {
             sparkleConnector.checkForUpdates()
         }
         .disabled(!sparkleConnector.canCheckForUpdates)
 
         Button("Preferences...") {
-            openSettings()
+            openPreferencesWindow()
         }
         
         Button("About Reef") {

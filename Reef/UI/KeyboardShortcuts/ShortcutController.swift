@@ -77,18 +77,17 @@ final class ShortcutController {
             return
         }
         
-        // If panel is already visible, cycle to next window
+        // If panel is already visible, cycle if same app; otherwise switch to the newly requested app.
         if cycleController.panel.isVisible {
-            cycleController.cycleNext()
+            if cycleController.isShowingSwitcher(for: binding) {
+                cycleController.cycleNext()
+            } else {
+                cycleController.showSwitcher(for: binding)
+            }
+            
             return
         }
 
-        // If the bound application was quit/terminated, relaunch it and do not show the cycle panel.
-        if binding.runningApplication?.isTerminated == true {
-            binding.focus()
-            return
-        }
-        
         // Determine starting index
         var startIndex = 0
         if let frontApp = Application.getFrontApplication(),

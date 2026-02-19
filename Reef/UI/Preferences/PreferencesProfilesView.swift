@@ -9,6 +9,7 @@ import SwiftUI
 
 struct PreferencesProfilesView: View {
     @EnvironmentObject var profileManager: ProfileManager
+    @AppStorage("defaultNumberOrder") private var defaultNumberOrder = "rightHanded"
     @StateObject private var modifierManager: ModifierManager = {
         if let manager = AppDelegate.modifierManager {
             return manager
@@ -16,12 +17,36 @@ struct PreferencesProfilesView: View {
         return ModifierManager()
     }()
     private var profiles: [Profile] { profileManager.profiles }
+    
+    private var sortedProfiles: [Profile] {
+        let numberedProfiles = profiles.filter { $0.profileNumber != nil }
+        let unnumberedProfiles = profiles.filter { $0.profileNumber == nil }
+        
+        let sortedNumbered = numberedProfiles.sorted { profile1, profile2 in
+            guard let num1 = profile1.profileNumber, let num2 = profile2.profileNumber else {
+                return false
+            }
+            
+            if defaultNumberOrder == "rightHanded" {
+                let order1 = num1 == 0 ? 0 : (11 - num1)
+                let order2 = num2 == 0 ? 0 : (11 - num2)
+                return order1 < order2
+            } else {
+                if num1 == 0 { return false }
+                if num2 == 0 { return true }
+                return num1 < num2
+            }
+        }
+        
+        return sortedNumbered + unnumberedProfiles.sorted { $0.createdAt < $1.createdAt }
+    }
+    
     @State private var selectedProfileID: UUID?
     
     var body: some View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
-                List(profiles, id: \.id, selection: $selectedProfileID) { profile in
+                List(sortedProfiles, id: \.id, selection: $selectedProfileID) { profile in
                     HStack {
                         Text(profile.name)
 
@@ -35,12 +60,6 @@ struct PreferencesProfilesView: View {
                         }
                     }
                     .tag(profile.id)
-                }
-                .onChange(of: selectedProfileID) { _, newID in
-                    if let newID = newID,
-                       let profile = profiles.first(where: { $0.id == newID }) {
-                        profileManager.switchProfile(profile)
-                    }
                 }
                 
                 Divider()
@@ -57,7 +76,7 @@ struct PreferencesProfilesView: View {
                             .frame(width: 20, height:20)
                     }
                     .buttonStyle(.borderless)
-                    .disabled(profiles.count <= 1 || selectedProfileID == nil)
+                    .disabled(sortedProfiles.count <= 1 || selectedProfileID == nil)
                     
                     Spacer()
                 }
@@ -94,17 +113,17 @@ struct PreferencesProfilesView: View {
     }
     
     private func removeProfile() {
-        guard profiles.count > 1,
+        guard sortedProfiles.count > 1,
               let selectedID = selectedProfileID,
-              let selectedIndex = profiles.firstIndex(where: { $0.id == selectedID }) else {
+              let selectedIndex = sortedProfiles.firstIndex(where: { $0.id == selectedID }) else {
             return
         }
         
-        let selectedProfile = profiles[selectedIndex]
+        let selectedProfile = sortedProfiles[selectedIndex]
         
         // Pick the next profile below, or fall back to the one above
-        let nextIndex = selectedIndex + 1 < profiles.count ? selectedIndex + 1 : selectedIndex - 1
-        let nextProfile = profiles[nextIndex]
+        let nextIndex = selectedIndex + 1 < sortedProfiles.count ? selectedIndex + 1 : selectedIndex - 1
+        let nextProfile = sortedProfiles[nextIndex]
         
         if selectedProfile.id == profileManager.currentProfileID {
             profileManager.switchProfile(nextProfile)
