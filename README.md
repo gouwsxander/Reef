@@ -2,7 +2,10 @@
 
 The macOS window manager that gives every app its own alt-tab.
 
-[![Watch the video](https://img.youtube.com/vi/E9v9giahH90/maxresdefault.jpg)](https://www.youtube.com/watch?v=E9v9giahH90)
+
+
+https://github.com/user-attachments/assets/2e350756-e6fe-42ba-acbd-9809092efe21
+
 
 
 
