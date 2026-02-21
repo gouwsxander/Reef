@@ -51,7 +51,9 @@ Note that window switching is scoped to your current Desktop.
 
 You can customize the modifiers for switching applications and profiles, and for binding different applications in Preferences > Shortcuts.
 
-By default, Reef works well [Rectangle](https://github.com/rxhanson/Rectangle) to manage your workflow. Rectangle allows you to position your windows via shortcuts. Reef allows you to re-focus.
+Reef also works well [Rectangle](https://github.com/rxhanson/Rectangle) to manage your workflow. 
+
+Rectangle allows you to position your windows via shortcuts. Reef allows you to re-focus.
 
 
 ## Instalation
@@ -78,7 +80,10 @@ You can find your MacOS version in your `About this Mac` page.
 
 ## Development
 
-🚧 Work in progress — everything is still being built
+Reef is currently in open Beta and we're applying the finishing touches for `version 1` release mid March. Stay tuned :)
+
+Open Beta users can share issues and feeback in the issues page with us [here](https://github.com/gouwsxander/Reef/issues).
+
 
 ## FAQ
 <details>
