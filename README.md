@@ -1,11 +1,10 @@
 # Reef
 
-We built Reef because we wanted a _simple_ window manager that lets you do everything form the keyboard. 
-
 The macOS window manager that gives every app its own alt-tab. 
 
-Reef lets you bind applications to number keys, to cycle through their windows.
+Reef lets you bind applications to number keys and cycle through their windows all through the keyboard.
 
+We built Reef because we wanted a _minimal_ window manager.
 
 https://github.com/user-attachments/assets/931d81af-4c67-4257-9edc-33fa976596eb
 
