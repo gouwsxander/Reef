@@ -16,17 +16,42 @@ https://github.com/user-attachments/assets/931d81af-4c67-4257-9edc-33fa976596eb
 - Do your binding and profile management through the keyboard
 - Customizable keyboard shortcuts
 
-### Example
 
-Press `Control + 1` to cycle through Chrome windows. 
+## Usage
 
-`Control + 2` for your terminal. 
+### Binding
+You should start by binding different applications to the number keys. You can do this
+- through Preferences > Profiles (accessed through the menu bar), or
+- by selecting the application of your choice and then pressing ctrl + option + shift.
 
-`Control + 3` for Slack. 
+### Profiles
+You can also set your bindings up in different profiles.
 
-You get the idea.
+For example, you may want two profiles:
+- "Coding": Which binds your favourite editor, browser, and terminal
+- "Browsing": Which binds your favourite browser, messaging app, and music client
 
-**Usage Note:** Reef works well [Rectangle](https://github.com/rxhanson/Rectangle) to manage your workflow. Rectangle allows you to position your windows via shortcuts. Reef allows you to re-focus.
+You can switch between profiles
+- using the menu bar, or
+- by binding them to the number keys, and then pressing `Control` + `Option` + `[Number]`.
+
+### Switching applications
+Suppose you're in the coding profile, and have your editor bound to `0`.
+
+To switch between apps and windows:
+1. Hold `Control` and press `0` to open a panel showing each of your editor's windows.
+2. Press `0` multiple times to select the specific window you want.
+3. Release `Control` to switch to that window.
+
+Reef gives every app its own 'alt-tab'.
+
+Note that window switching is scoped to your current Desktop.
+
+### Customization
+
+You can customize the modifiers for switching applications and profiles, and for binding different applications in Preferences > Shortcuts.
+
+By default, Reef works well [Rectangle](https://github.com/rxhanson/Rectangle) to manage your workflow. Rectangle allows you to position your windows via shortcuts. Reef allows you to re-focus.
 
 
 ## Instalation
