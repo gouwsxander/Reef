@@ -1,6 +1,10 @@
 # Reef
 
-The macOS window manager that gives every app its own alt-tab
+The macOS window manager that gives every app its own alt-tab.
+
+[![Watch the video](https://www.youtube.com/watch?v=E9v9giahH90)
+
+
 
 ## What it does
 
