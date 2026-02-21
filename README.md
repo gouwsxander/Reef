@@ -18,9 +18,15 @@ https://github.com/user-attachments/assets/931d81af-4c67-4257-9edc-33fa976596eb
 
 ### Example
 
-Press `Control + 1` to cycle through Chrome windows. `Control + 2` for your terminal. `Control + 3` for Slack. You get the idea.
+Press `Control + 1` to cycle through Chrome windows. 
 
-**Usage Note:** Reef works well Rectangle to manage your workflow. 
+`Control + 2` for your terminal. 
+
+`Control + 3` for Slack. 
+
+You get the idea.
+
+**Usage Note:** Reef works well [Rectangle](https://github.com/rxhanson/Rectangle) to manage your workflow. Rectangle allows you to position your windows via shortcuts. Reef allows you to re-focus.
 
 
 ## Instalation
@@ -57,7 +63,7 @@ The name comes from the starts of refocus and reframe. And, like a coral reef su
 </details>
 
 ## Related Projects
-- yabai
-- Aerospace
-- rectangle
-- alt-tab
+- [yabai](https://github.com/asmvik/yabai)
+- [Aerospace](https://github.com/nikitabobko/AeroSpace?tab=readme-ov-file)
+- [Rectangle](https://github.com/rxhanson/Rectangle)
+- [alt-tab](https://github.com/lwouis/alt-tab-macos/tree/master)
