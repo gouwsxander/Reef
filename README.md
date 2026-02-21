@@ -1,32 +1,64 @@
 # Reef
 
-The macOS window manager that gives every app its own alt-tab.
+We built Reef because we wanted a _simple_ window manager that lets you do everything form the keyboard. 
+
+The macOS window manager that gives every app its own alt-tab. 
+
+Reef lets you bind applications to number keys, to cycle through their windows.
 
 
 https://github.com/user-attachments/assets/931d81af-4c67-4257-9edc-33fa976596eb
 
 
+## Key Features
 
+- Bind applications to number keys to refocus to **any** window for that app
+- Assign profiles for different sets of bindings
+- Do your binding and profile management through the keyboard
+- Customizable keyboard shortcuts
 
-
-
-## What it does
-
-Reef lets you bind applications to number keys, to cycle through their windows. It's like alt-tab, but faster.
+### Example
 
 Press `Control + 1` to cycle through Chrome windows. `Control + 2` for your terminal. `Control + 3` for Slack. You get the idea.
 
-## Why "Reef"?
+**Usage Note:** Reef works well Rectangle to manage your workflow. 
 
-The name comes from the starts of refocus and reframe. And, like a coral reef supports a diverse ecosystem, Reef supports your workspace—helping you navigate between windows quickly and easily.
 
-## Features
+## Instalation
 
-- **Bind apps to numbers:** Assign any application to number keys 0-9
-- **Fast window cycling:** Jump between apps and windows easily
-- **Customizable modifiers:** Use Shift, Control, Command, Option, or any combination
-- **Multiple profiles:** Switch between different setups for coding, editing, etc.
+The latest release can be downloaded from the release page [here](https://github.com/gouwsxander/Reef/releases).
 
-## Status
+Simply: 
+1) Download the latest `.zip` and unzip the file.
+2) Drag `Reef.app` into your Applications folder.
+
+
+### Support Us
+If you'd like to support our project, consider downloading the app through our `polar.sh` portal.
+
+### Compatibility
+
+Reef is compatible with `MacOS 14.6 (Sonoma)` and onwards. 
+
+You can find your MacOS version in your `About this Mac` page.
+
+<img width="291" height="127" alt="image" src="https://github.com/user-attachments/assets/ef0c821e-9615-4ef9-af84-954d49d41978" />
+
+
+
+## Development
 
 🚧 Work in progress — everything is still being built
+
+## FAQ
+<details>
+<summary><b>Why Reef?</b></summary>
+<br>
+The name comes from the starts of refocus and reframe. And, like a coral reef supports a diverse ecosystem, Reef supports your workspace—helping you navigate between windows quickly and easily.
+</details>
+
+## Related Projects
+- yabai
+- Aerospace
+- rectangle
+- alt-tab
