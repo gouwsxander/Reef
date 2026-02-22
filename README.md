@@ -56,7 +56,7 @@ Reef also works well [Rectangle](https://github.com/rxhanson/Rectangle) to manag
 Rectangle allows you to position your windows via shortcuts. Reef allows you to re-focus.
 
 
-## Instalation
+## Installation
 
 The latest release can be downloaded from the release page [here](https://github.com/gouwsxander/Reef/releases).
 
