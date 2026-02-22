@@ -76,7 +76,7 @@ If you'd like to support our project, consider downloading the app through our `
 
 Reef is compatible with `MacOS 14.6 (Sonoma)` and onwards. 
 
-You can find your MacOS version in your `About this Mac` page.
+You can find your MacOS version in your `About This Mac` page.
 
 <img width="291" height="127" alt="image" src="https://github.com/user-attachments/assets/ef0c821e-9615-4ef9-af84-954d49d41978" />
 
