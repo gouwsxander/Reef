@@ -66,7 +66,9 @@ Simply:
 
 
 ### Support Us
-If you'd like to support our project, consider downloading the app through our `polar.sh` portal.
+If you'd like to support our project, consider downloading the app through our `polar.sh` with the button below.
+
+[![Polar](https://img.shields.io/badge/Support-Polar-blue?logo=polar&logoColor=white)]([https://polar.sh/xander-gouws](https://polar.sh/checkout/polar_c_J1ChmJoBJIGjOt8YvGqwoFpTNffkpvIHjQHWx0W30ue))
 
 ### Compatibility
 
