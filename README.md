@@ -82,7 +82,9 @@ You can find your MacOS version in your `About this Mac` page.
 
 ## Development
 
-Reef is currently in open Beta and we're applying the finishing touches for `version 1` release mid March. Stay tuned :)
+Reef is currently in open Beta and we're applying the finishing touches for `version 1` release mid March. 
+
+Stay tuned :)
 
 Open Beta users can share issues and feeback in the issues page with us [here](https://github.com/gouwsxander/Reef/issues).
 
