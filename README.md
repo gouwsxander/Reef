@@ -88,7 +88,7 @@ Reef is currently in open Beta and we're applying the finishing touches for `ver
 
 Stay tuned :)
 
-Open Beta users can share issues and feeback in the issues page with us [here](https://github.com/gouwsxander/Reef/issues).
+Open Beta users can share issues and feeback via the issues page with us [here](https://github.com/gouwsxander/Reef/issues).
 
 
 ## FAQ
