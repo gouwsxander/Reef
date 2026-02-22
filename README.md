@@ -1,6 +1,6 @@
 # Reef
 
-The macOS window manager that gives every app its own alt-tab. 
+The macOS window manager that gives every app its own Alt-Tab. 
 
 Reef lets you bind applications to number keys and cycle through their windows all through the keyboard.
 
@@ -20,9 +20,9 @@ https://github.com/user-attachments/assets/931d81af-4c67-4257-9edc-33fa976596eb
 ## Usage
 
 ### Binding
-You should start by binding different applications to the number keys. You can do this
-- through Preferences > Profiles (accessed through the menu bar), or
-- by selecting the application of your choice and then pressing ctrl + option + shift.
+You should start by binding different applications to the number keys. You can do this:
+- through **Preferences → Profiles** (accessed through the menu bar), or
+- by selecting the application of your choice and then pressing <kbd>Ctrl</kbd> + <kbd>Option</kbd> + <kbd>Shift</kbd>.
 
 ### Profiles
 You can also set your bindings up in different profiles.
@@ -31,37 +31,36 @@ For example, you may want two profiles:
 - "Coding": Which binds your favourite editor, browser, and terminal
 - "Browsing": Which binds your favourite browser, messaging app, and music client
 
-You can switch between profiles
+You can switch between profiles:
 - using the menu bar, or
-- by binding them to the number keys, and then pressing `Control` + `Option` + `[Number]`.
+- by binding them to the number keys, and then pressing <kbd>Ctrl</kbd> + <kbd>Option</kbd> + <kbd>[0-9]</kbd>.
 
 ### Switching applications
 Suppose you're in the coding profile, and have your editor bound to `0`.
 
 To switch between apps and windows:
-1. Hold `Control` and press `0` to open a panel showing each of your editor's windows.
-2. Press `0` multiple times to select the specific window you want.
-3. Release `Control` to switch to that window.
+1. Hold <kbd>Control</kbd> and press <kbd>0</kbd> to open a panel showing each of your editor's windows.
+2. Press <kbd>0</kbd> multiple times to select the specific window you want.
+3. Release <kbd>Control</kbd> to switch to that window.
 
-Reef gives every app its own 'alt-tab'.
+Reef gives every app its own 'Alt-Tab'.
 
-Note that window switching is scoped to your current Desktop.
+Note that window switching is scoped to your current [macOS space](https://support.apple.com/en-ca/guide/mac-help/mh14112/mac).
 
 ### Customization
 
-You can customize the modifiers for switching applications and profiles, and for binding different applications in Preferences > Shortcuts.
+You can customize the modifiers for switching applications and profiles, and for binding different applications in **Preferences → Shortcuts**.
 
-Reef also works well [Rectangle](https://github.com/rxhanson/Rectangle) to manage your workflow. 
-
-Rectangle allows you to position your windows via shortcuts. Reef allows you to re-focus.
-
+Reef also works well with [Rectangle](https://github.com/rxhanson/Rectangle) to manage your workflow, especially with keyboard shortcuts:
+- Rectangle positions & re-arranges your windows
+- Reef re-focuses your windows
 
 ## Installation
 
-The latest release can be downloaded from the release page [here](https://github.com/gouwsxander/Reef/releases).
+The latest release can be downloaded [here](https://github.com/gouwsxander/Reef/releases/latest).
 
 Simply: 
-1) Download the latest `.zip` and unzip the file.
+1) Download the `.zip` and unzip the file.
 2) Drag `Reef.app` into your Applications folder.
 
 
@@ -74,9 +73,9 @@ If you'd like to support our project, consider downloading the app through our `
 
 ### Compatibility
 
-Reef is compatible with `MacOS 14.6 (Sonoma)` and onwards. 
+Reef is compatible with **macOS 14.6 (Sonoma)** and onwards. 
 
-You can find your MacOS version in your `About This Mac` page.
+You can find your macOS version from the ** → About This Mac** page:
 
 <img width="291" height="127" alt="image" src="https://github.com/user-attachments/assets/ef0c821e-9615-4ef9-af84-954d49d41978" />
 
@@ -84,7 +83,7 @@ You can find your MacOS version in your `About This Mac` page.
 
 ## Development
 
-Reef is currently in open Beta and we're applying the finishing touches for `version 1` release mid March. 
+Reef is currently in **Open Beta** while we're applying the finishing touches for a stable `v1` release in mid-March 2026. 
 
 Stay tuned :)
 
