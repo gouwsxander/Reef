@@ -10,25 +10,21 @@ import KeyboardShortcuts
 
 @MainActor
 final class ModifierManager: ObservableObject {
-    @AppStorage("bindEnabled") var bindEnabled = true {
-        didSet { updateShortcuts() }
-    }
+    @AppStorage("bindEnabled") private var bindEnabledStored = true
     @AppStorage("bindControl") var bindControl = true {
         didSet { updateShortcuts() }
     }
-    @AppStorage("bindOption") var bindOption = false {
+    @AppStorage("bindOption") var bindOption = true {
         didSet { updateShortcuts() }
     }
     @AppStorage("bindCommand") var bindCommand = false {
         didSet { updateShortcuts() }
     }
-    @AppStorage("bindShift") var bindShift = false {
+    @AppStorage("bindShift") var bindShift = true {
         didSet { updateShortcuts() }
     }
     
-    @AppStorage("activateEnabled") var activateEnabled = true {
-        didSet { updateShortcuts() }
-    }
+    @AppStorage("activateEnabled") private var activateEnabledStored = true
     @AppStorage("activateControl") var activateControl = true {
         didSet { updateShortcuts() }
     }
@@ -42,9 +38,7 @@ final class ModifierManager: ObservableObject {
         didSet { updateShortcuts() }
     }
     
-    @AppStorage("profileEnabled") var profileEnabled = true {
-        didSet { updateShortcuts() }
-    }
+    @AppStorage("profileEnabled") private var profileEnabledStored = true
     @AppStorage("profileControl") var profileControl = true {
         didSet { updateShortcuts() }
     }
@@ -54,9 +48,13 @@ final class ModifierManager: ObservableObject {
     @AppStorage("profileCommand") var profileCommand = false {
         didSet { updateShortcuts() }
     }
-    @AppStorage("profileShift") var profileShift = true {
+    @AppStorage("profileShift") var profileShift = false {
         didSet { updateShortcuts() }
     }
+
+    var bindEnabled: Bool { !bindModifiers.isEmpty }
+    var activateEnabled: Bool { !activateModifiers.isEmpty }
+    var profileEnabled: Bool { !profileModifiers.isEmpty }
 
     
     init() {
@@ -117,25 +115,49 @@ final class ModifierManager: ObservableObject {
         if profileCommand  { symbols += "⌘ " }
         return symbols
     }
+
+    func resetToDefaults() {
+        activateControl = true
+        activateOption = false
+        activateShift = false
+        activateCommand = false
+
+        profileControl = true
+        profileOption = true
+        profileShift = false
+        profileCommand = false
+
+        bindControl = true
+        bindOption = true
+        bindShift = true
+        bindCommand = false
+    }
     
     private func updateShortcuts() {
         let bindMods = bindModifiers
         let activateMods = activateModifiers
         let profileMods = profileModifiers
+        let bindIsEnabled = !bindMods.isEmpty
+        let activateIsEnabled = !activateMods.isEmpty
+        let profileIsEnabled = !profileMods.isEmpty
+
+        bindEnabledStored = bindIsEnabled
+        activateEnabledStored = activateIsEnabled
+        profileEnabledStored = profileIsEnabled
 
         for number in 0...9 {
             KeyboardShortcuts.setShortcut(
-                bindEnabled ? .init(numberKeys[number], modifiers: bindMods) : nil,
+                bindIsEnabled ? .init(numberKeys[number], modifiers: bindMods) : nil,
                 for: .bindShortcuts[number]
             )
 
             KeyboardShortcuts.setShortcut(
-                activateEnabled ? .init(numberKeys[number], modifiers: activateMods) : nil,
+                activateIsEnabled ? .init(numberKeys[number], modifiers: activateMods) : nil,
                 for: .activateShortcuts[number]
             )
 
             KeyboardShortcuts.setShortcut(
-                profileEnabled ? .init(numberKeys[number], modifiers: profileMods) : nil,
+                profileIsEnabled ? .init(numberKeys[number], modifiers: profileMods) : nil,
                 for: .profileShortcuts[number]
             )
         }
