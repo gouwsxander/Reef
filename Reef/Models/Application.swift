@@ -249,18 +249,30 @@ class Application {
     }
     
     func getWindows() -> [Window] {
-        let axWindows = self.getAXWindows()
-        var windows = axWindows.map { axWindow in
+        var sourceElements = self.getAXWindows()
+
+        // Native full-screen apps report an empty kAXWindowsAttribute (the
+        // full-screen window lives on its own Space). The focused/main window
+        // is still exposed, so fall back to it rather than showing nothing.
+        if sourceElements.isEmpty, let element {
+            if let focused: AXUIElement = element.getAttributeValue(.focusedWindow) {
+                sourceElements = [focused]
+            } else if let main: AXUIElement = element.getAttributeValue(.mainWindow) {
+                sourceElements = [main]
+            }
+        }
+
+        var windows = sourceElements.map { axWindow in
             Window(axWindow, self)
         }
-        
+
         // Finder can expose a trailing generic "Finder" window that is not useful for switching.
         if bundleIdentifier == "com.apple.finder",
            let lastWindow = windows.last,
            lastWindow.title == "Finder" {
             windows.removeLast()
         }
-        
+
         return windows
     }
     
