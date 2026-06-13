@@ -272,6 +272,13 @@ class Application {
         // Native full-screen apps report an empty kAXWindowsAttribute (the
         // full-screen window lives on its own Space). The focused/main window
         // is still exposed, so fall back to it rather than showing nothing.
+        //
+        // Known limitation: kAXWindowsAttribute is Space-scoped. When the
+        // *current* Space is a full-screen app's Space, querying any OTHER app
+        // returns zero windows, so the fallback yields only that app's focused
+        // window — not its full window list. Enumerating windows across Spaces
+        // would require continuous background AX observation (AltTab-style) or
+        // private Spaces APIs, which is out of scope for this on-demand query.
         if sourceElements.isEmpty, let element {
             if let focused: AXUIElement = element.getAttributeValue(.focusedWindow) {
                 sourceElements = [focused]
