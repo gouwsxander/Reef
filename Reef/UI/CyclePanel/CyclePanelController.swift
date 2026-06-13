@@ -149,6 +149,9 @@ final class CyclePanelController: NSObject {
         case .window(let window):
             window.focus()
             hideSwitcher()
+        case .action(.requestAccessibility):
+            hideSwitcher()
+            Self.openAccessibilitySettings()
         case .action:
             let application = currentApplication
             hideSwitcher()
@@ -167,6 +170,13 @@ final class CyclePanelController: NSObject {
         }
     }
     
+    private static func openAccessibilitySettings() {
+        guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") else {
+            return
+        }
+        NSWorkspace.shared.open(url)
+    }
+
     private func hideSwitcher() {
         removeFlagsMonitor()
         removeKeyDownMonitor()
