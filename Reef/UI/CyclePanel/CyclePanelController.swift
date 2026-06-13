@@ -135,18 +135,7 @@ final class CyclePanelController: NSObject {
     
     func isShowingSwitcher(for application: Application) -> Bool {
         guard let currentApplication else { return false }
-        
-        if let currentBundleID = currentApplication.bundleIdentifier,
-           let targetBundleID = application.bundleIdentifier {
-            return currentBundleID == targetBundleID
-        }
-        
-        if let currentURL = currentApplication.bundleUrl,
-           let targetURL = application.bundleUrl {
-            return currentURL == targetURL
-        }
-        
-        return currentApplication.title == application.title
+        return currentApplication.isSameApplication(as: application)
     }
     
     // Called when user releases Ctrl

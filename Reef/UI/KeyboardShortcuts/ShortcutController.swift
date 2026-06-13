@@ -91,7 +91,7 @@ final class ShortcutController {
         // Determine starting index
         var startIndex = 0
         if let frontApp = Application.getFrontApplication(),
-           frontApp.title == binding.title {
+           frontApp.isSameApplication(as: binding) {
             // Already on this app, start at second window
             startIndex = 1
         }

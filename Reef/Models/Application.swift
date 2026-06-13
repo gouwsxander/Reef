@@ -100,6 +100,18 @@ class Application {
     func focus() {
         self.activate()
     }
+
+    // Identity comparison that prefers stable identifiers over the display
+    // title (which can be localized or shared between apps).
+    func isSameApplication(as other: Application) -> Bool {
+        if let a = bundleIdentifier, let b = other.bundleIdentifier {
+            return a == b
+        }
+        if let a = bundleUrl, let b = other.bundleUrl {
+            return a == b
+        }
+        return title == other.title
+    }
     
     var isRunning: Bool {
         refreshRunningApplication() != nil
