@@ -248,8 +248,26 @@ class Application {
         return windows
     }
     
+    // A window is worth showing in the switcher if it is a standard window, or
+    // (for apps with non-standard subroles) at least has a title. This drops
+    // junk like Chromium's hidden helper windows (empty title + AXUnknown).
+    static func isRelevantWindow(subrole: String?, title: String?) -> Bool {
+        if subrole == NSAccessibility.Subrole.standardWindow.rawValue {
+            return true
+        }
+        if let title, !title.isEmpty {
+            return true
+        }
+        return false
+    }
+
     func getWindows() -> [Window] {
-        var sourceElements = self.getAXWindows()
+        var sourceElements = self.getAXWindows().filter { axWindow in
+            Application.isRelevantWindow(
+                subrole: axWindow.getAttributeValue(.subrole),
+                title: axWindow.getAttributeValue(.title)
+            )
+        }
 
         // Native full-screen apps report an empty kAXWindowsAttribute (the
         // full-screen window lives on its own Space). The focused/main window
