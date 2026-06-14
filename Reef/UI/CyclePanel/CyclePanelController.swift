@@ -115,6 +115,11 @@ final class CyclePanelController: NSObject {
     func cycleNext() {
         state.cycleNext()
     }
+
+    // Called when user presses Ctrl+Shift+[number] while panel is visible
+    func cyclePrevious() {
+        state.cyclePrevious()
+    }
     
     func isShowingSwitcher(for application: Application) -> Bool {
         guard let currentApplication else { return false }

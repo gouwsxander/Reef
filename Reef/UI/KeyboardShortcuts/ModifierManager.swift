@@ -145,6 +145,12 @@ final class ModifierManager: ObservableObject {
         activateEnabledStored = activateIsEnabled
         profileEnabledStored = profileIsEnabled
 
+        // Reverse cycling = the activate combo plus Shift. Only available when the
+        // activate combo doesn't already include Shift (otherwise it would collide
+        // with forward activation).
+        let reverseMods = activateMods.union(.shift)
+        let reverseIsEnabled = activateIsEnabled && !activateMods.contains(.shift)
+
         for number in 0...9 {
             KeyboardShortcuts.setShortcut(
                 bindIsEnabled ? .init(numberKeys[number], modifiers: bindMods) : nil,
@@ -154,6 +160,11 @@ final class ModifierManager: ObservableObject {
             KeyboardShortcuts.setShortcut(
                 activateIsEnabled ? .init(numberKeys[number], modifiers: activateMods) : nil,
                 for: .activateShortcuts[number]
+            )
+
+            KeyboardShortcuts.setShortcut(
+                reverseIsEnabled ? .init(numberKeys[number], modifiers: reverseMods) : nil,
+                for: .activateReverseShortcuts[number]
             )
 
             KeyboardShortcuts.setShortcut(

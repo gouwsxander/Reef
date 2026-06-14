@@ -21,6 +21,10 @@ extension KeyboardShortcuts.Name {
     static let activateShortcuts: [KeyboardShortcuts.Name] = (0...9).map { number in
         Self("activate\(number)")
     }
+
+    static let activateReverseShortcuts: [KeyboardShortcuts.Name] = (0...9).map { number in
+        Self("activateReverse\(number)")
+    }
     
     static let profileShortcuts: [KeyboardShortcuts.Name] = (0...9).map { number in
         Self("profile\(number)")
@@ -47,6 +51,10 @@ final class ShortcutController {
             
             KeyboardShortcuts.onKeyDown(for: .activateShortcuts[number]) {
                 self.handleActivate(number: number)
+            }
+
+            KeyboardShortcuts.onKeyDown(for: .activateReverseShortcuts[number]) {
+                self.handleActivateReverse(number: number)
             }
             
             KeyboardShortcuts.onKeyDown(for: .profileShortcuts[number]) {
@@ -98,7 +106,30 @@ final class ShortcutController {
         
         cycleController.showSwitcher(for: binding, startIndex: startIndex)
     }
-    
+
+    private func handleActivateReverse(number: Int) {
+        guard let binding = profileManager.application(for: number) else {
+            NSSound.beep()
+            return
+        }
+
+        // If the panel is already showing this app, step backwards through its windows.
+        // A different app's number behaves like a forward activate (switch to that app).
+        if cycleController.panel.isVisible {
+            if cycleController.isShowingSwitcher(for: binding) {
+                cycleController.cyclePrevious()
+            } else {
+                cycleController.showSwitcher(for: binding)
+            }
+
+            return
+        }
+
+        // Opening via reverse: show the switcher and select the last window.
+        cycleController.showSwitcher(for: binding)
+        cycleController.cyclePrevious()
+    }
+
     func handleProfile(number: Int) {
         guard let profileID = profileManager.profileID(forNumber: number) else {
             NSSound.beep()

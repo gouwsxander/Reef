@@ -85,6 +85,11 @@ final class CyclePanelState: ObservableObject {
         guard !items.isEmpty else { return }
         selectedIndex = (selectedIndex + 1) % items.count
     }
+
+    func cyclePrevious() {
+        guard !items.isEmpty else { return }
+        selectedIndex = (selectedIndex - 1 + items.count) % items.count
+    }
     
     func reset() {
         items = []
