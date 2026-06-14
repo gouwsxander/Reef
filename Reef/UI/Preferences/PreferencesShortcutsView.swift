@@ -120,9 +120,26 @@ struct PreferencesShortcutsView: View {
             } footer: {
                 Text("⌃ Control  •  ⌥ Option  •  ⇧ Shift  •  ⌘ Command")
             }
+
+            Section {
+                Toggle(isOn: $modifierManager.cycleCurrentAppEnabled) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Switch current app windows")
+                            .foregroundColor(modifierManager.activateEnabled ? .primary : .secondary)
+                        Text(modifierManager.activateEnabled
+                             ? "Cycle windows of the frontmost app with \(modifierManager.activateModifierSymbols)⇥"
+                             : "Enable a Switch app modifier to use this")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .toggleStyle(.switch)
+                .disabled(!modifierManager.activateEnabled)
+                .opacity(modifierManager.activateEnabled ? 1 : 0.6)
+            }
         }
         .formStyle(.grouped)
-        .frame(height: !modifierManager.activateEnabled || !modifierManager.bindEnabled || !modifierManager.profileEnabled ? 395 : 360)
+        .frame(height: !modifierManager.activateEnabled || !modifierManager.bindEnabled || !modifierManager.profileEnabled ? 480 : 445)
         .alert("Reset shortcut modifiers?", isPresented: $showingResetConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Reset", role: .destructive) {
