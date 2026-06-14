@@ -38,6 +38,10 @@ final class ModifierManager: ObservableObject {
         didSet { updateShortcuts() }
     }
     
+    @AppStorage("cycleCurrentAppEnabled") var cycleCurrentAppEnabled = false {
+        didSet { updateShortcuts() }
+    }
+
     @AppStorage("profileEnabled") private var profileEnabledStored = true
     @AppStorage("profileControl") var profileControl = true {
         didSet { updateShortcuts() }
@@ -107,6 +111,15 @@ final class ModifierManager: ObservableObject {
         return modifiers
     }
     
+    var activateModifierSymbols: String {
+        var symbols = ""
+        if activateControl  { symbols += "⌃ " }
+        if activateOption   { symbols += "⌥ " }
+        if activateShift    { symbols += "⇧ " }
+        if activateCommand  { symbols += "⌘ " }
+        return symbols
+    }
+
     var profileModifierSymbols: String {
         var symbols = ""
         if profileControl  { symbols += "⌃ " }
@@ -161,5 +174,10 @@ final class ModifierManager: ObservableObject {
                 for: .profileShortcuts[number]
             )
         }
+
+        KeyboardShortcuts.setShortcut(
+            (cycleCurrentAppEnabled && activateIsEnabled) ? .init(.tab, modifiers: activateMods) : nil,
+            for: .cycleCurrentApp
+        )
     }
 }
