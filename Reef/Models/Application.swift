@@ -183,13 +183,7 @@ class Application {
             existingWindow.focus()
             return true
         }
-        
-        // Official fallback: if the app is already running, just focus/activate it.
-        if isRunning {
-            activate()
-            return true
-        }
-        
+        // Runnings apps with no window won't open a new window when activated. You need to reopen it too.
         do {
             _ = try await reopen(configuration: Self.defaultOpenConfiguration(activates: true))
             return true
