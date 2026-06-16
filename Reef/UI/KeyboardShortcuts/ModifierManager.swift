@@ -159,25 +159,38 @@ final class ModifierManager: ObservableObject {
         profileEnabledStored = profileIsEnabled
 
         for number in 0...9 {
-            KeyboardShortcuts.setShortcut(
-                bindIsEnabled ? .init(numberKeys[number], modifiers: bindMods) : nil,
-                for: .bindShortcuts[number]
-            )
+            setNumberShortcut(number, enabled: bindIsEnabled, modifiers: bindMods,
+                              mainName: .bindShortcuts[number], keypadName: .bindKeypadShortcuts[number])
 
-            KeyboardShortcuts.setShortcut(
-                activateIsEnabled ? .init(numberKeys[number], modifiers: activateMods) : nil,
-                for: .activateShortcuts[number]
-            )
+            setNumberShortcut(number, enabled: activateIsEnabled, modifiers: activateMods,
+                              mainName: .activateShortcuts[number], keypadName: .activateKeypadShortcuts[number])
 
-            KeyboardShortcuts.setShortcut(
-                profileIsEnabled ? .init(numberKeys[number], modifiers: profileMods) : nil,
-                for: .profileShortcuts[number]
-            )
+            setNumberShortcut(number, enabled: profileIsEnabled, modifiers: profileMods,
+                              mainName: .profileShortcuts[number], keypadName: .profileKeypadShortcuts[number])
         }
 
         KeyboardShortcuts.setShortcut(
             (cycleCurrentAppEnabled && activateIsEnabled) ? .init(.tab, modifiers: activateMods) : nil,
             for: .cycleCurrentApp
+        )
+    }
+
+    /// Registers a number shortcut on both the main-row key and its numeric-keypad
+    /// equivalent so the shortcut fires regardless of which key the user presses.
+    private func setNumberShortcut(
+        _ number: Int,
+        enabled: Bool,
+        modifiers: NSEvent.ModifierFlags,
+        mainName: KeyboardShortcuts.Name,
+        keypadName: KeyboardShortcuts.Name
+    ) {
+        KeyboardShortcuts.setShortcut(
+            enabled ? .init(numberKeys[number], modifiers: modifiers) : nil,
+            for: mainName
+        )
+        KeyboardShortcuts.setShortcut(
+            enabled ? .init(keypadKeys[number], modifiers: modifiers) : nil,
+            for: keypadName
         )
     }
 }

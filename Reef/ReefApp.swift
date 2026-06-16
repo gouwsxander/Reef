@@ -15,7 +15,7 @@ struct ReefApp: App {
     @StateObject private var profileManager: ProfileManager
     @StateObject private var sparkleConnector = SparkleConnector()
     @AppStorage("launchOnLogin") private var launchOnLogin = true
-    
+
     init() {
         let profileManager = ProfileManager()
         _profileManager = StateObject(wrappedValue: profileManager)
@@ -42,8 +42,7 @@ struct ReefApp: App {
                 .environmentObject(profileManager)
                 .environmentObject(sparkleConnector)
         } label: {
-            Image("menu_placeholder")
-                .renderingMode(.template)
+            MenuBarLabel(profileManager: profileManager)
         }
     }
 }
@@ -62,7 +61,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         AppDelegate.instance = self
         AppDelegate.modifierManager = ModifierManager()
         
-        cycleController = CyclePanelController()
+        cycleController = CyclePanelController(modifierManager: AppDelegate.modifierManager)
         shortcutManager = ShortcutController(cycleController, AppDelegate.profileManager)
         windowManager = PreferencesController()
         

@@ -153,6 +153,12 @@ struct MenuBarView: View {
         Button("Preferences...") {
             openPreferencesWindow()
         }
+
+        Button("Support Reef...") {
+            if let url = URL(string: "https://getreef.app/verify?action=checkout") {
+                NSWorkspace.shared.open(url)
+            }
+        }
         
         Button("About Reef") {
             NSApp.orderFrontStandardAboutPanel()

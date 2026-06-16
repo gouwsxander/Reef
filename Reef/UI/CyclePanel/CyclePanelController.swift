@@ -13,7 +13,9 @@ import SwiftUI
 final class CyclePanelController: NSObject {
     private(set) var panel: CyclePanel!
     private let state = CyclePanelState()
-    private var flagsMonitor: Any?
+    private let modifierManager: ModifierManager
+    private var localFlagsMonitor: Any?
+    private var globalFlagsMonitor: Any?
     private var keyDownMonitor: Any?
     private var currentApplication: Application?
     private var panelAnchorCenter: CGPoint?
@@ -27,13 +29,15 @@ final class CyclePanelController: NSObject {
     private let rowHeight: CGFloat = 44
     private let rowSpacing: CGFloat = 4
     private let listVerticalPadding: CGFloat = 8
+    private static let releaseModifierMask: NSEvent.ModifierFlags = [.control, .option, .shift, .command]
 
     private var minPanelContentHeight: CGFloat {
         // Minimum height that still matches the layout for one row.
         headerHeight + dividerHeight + (listVerticalPadding * 2) + rowHeight
     }
     
-    override init() {
+    init(modifierManager: ModifierManager) {
+        self.modifierManager = modifierManager
         super.init()
         createPanel()
     }
@@ -56,7 +60,7 @@ final class CyclePanelController: NSObject {
         ])
     }
     
-    // Called when user presses Ctrl+[number]
+    // Called when user presses the configured window-switching shortcut.
     func showSwitcher(for application: Application, startIndex: Int = 0) {
         currentApplication = application
         state.setApplication(application)
@@ -100,7 +104,7 @@ final class CyclePanelController: NSObject {
         let targetContentRect = NSRect(x: 0, y: 0, width: panelContentWidth, height: clampedContentHeight)
         let targetFrameSize = panel.frameRect(forContentRect: targetContentRect).size
 
-        // Keep the panel pinned to the same center while Ctrl is held.
+        // Keep the panel pinned to the same center while the switcher shortcut is held.
         let center = panelAnchorCenter ?? CGPoint(x: panel.frame.midX, y: panel.frame.midY)
         let newOrigin = CGPoint(
             x: center.x - targetFrameSize.width / 2,
@@ -111,7 +115,7 @@ final class CyclePanelController: NSObject {
         panel.setFrame(newFrame, display: true, animate: false)
     }
     
-    // Called when user presses Ctrl+[number] again while panel is visible
+    // Called when user presses the switcher shortcut again while panel is visible.
     func cycleNext() {
         state.cycleNext()
     }
@@ -132,7 +136,7 @@ final class CyclePanelController: NSObject {
         return currentApplication.title == application.title
     }
     
-    // Called when user releases Ctrl
+    // Called when user releases a configured switcher modifier.
     func activateSelectedWindow() {
         guard let item = state.currentItem else {
             hideSwitcher()
@@ -171,28 +175,44 @@ final class CyclePanelController: NSObject {
     }
     
     private func installFlagsMonitor() {
-        guard flagsMonitor == nil else { return }
+        guard localFlagsMonitor == nil, globalFlagsMonitor == nil else { return }
         
-        flagsMonitor = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
+        localFlagsMonitor = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
             guard let self = self else { return event }
             
-            let controlPressed = event.modifierFlags.contains(.control)
-            
-            // Control was released
-            if !controlPressed {
-                Task { @MainActor in
-                    self.activateSelectedWindow()
-                }
-            }
+            self.activateIfSwitcherModifierWasReleased(event.modifierFlags)
             
             return event
+        }
+
+        globalFlagsMonitor = NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
+            Task { @MainActor in
+                self?.activateIfSwitcherModifierWasReleased(event.modifierFlags)
+            }
+        }
+    }
+
+    private func activateIfSwitcherModifierWasReleased(_ modifierFlags: NSEvent.ModifierFlags) {
+        guard panel.isVisible else { return }
+
+        let requiredModifiers = modifierManager.activateModifiers.intersection(Self.releaseModifierMask)
+        guard !requiredModifiers.isEmpty else { return }
+
+        let pressedModifiers = modifierFlags.intersection(Self.releaseModifierMask)
+        if !requiredModifiers.isSubset(of: pressedModifiers) {
+            activateSelectedWindow()
         }
     }
     
     private func removeFlagsMonitor() {
-        if let monitor = flagsMonitor {
+        if let monitor = localFlagsMonitor {
             NSEvent.removeMonitor(monitor)
-            flagsMonitor = nil
+            localFlagsMonitor = nil
+        }
+
+        if let monitor = globalFlagsMonitor {
+            NSEvent.removeMonitor(monitor)
+            globalFlagsMonitor = nil
         }
     }
 
@@ -223,9 +243,14 @@ final class CyclePanelController: NSObject {
     
     deinit {
         // Capture the monitor in a local variable before deinit (while still on main actor)
-        let monitor = flagsMonitor
-        if let monitor {
-            NSEvent.removeMonitor(monitor)
+        let localMonitor = localFlagsMonitor
+        if let localMonitor {
+            NSEvent.removeMonitor(localMonitor)
+        }
+
+        let globalMonitor = globalFlagsMonitor
+        if let globalMonitor {
+            NSEvent.removeMonitor(globalMonitor)
         }
 
         let keyMonitor = keyDownMonitor
