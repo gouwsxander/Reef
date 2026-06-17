@@ -72,6 +72,12 @@ final class SparkleConnector: ObservableObject {
     }
 
     private func performLaunchCheckIfNeeded() {
+        #if DEBUG
+        // Debug builds are ad-hoc signed, so Sparkle cannot validate a
+        // downloaded update and surfaces an "improperly signed" error. Skip the
+        // automatic launch check; the manual "Check for updates…" item still works.
+        return
+        #else
         guard didStartUpdater else { return }
         guard !didPerformLaunchCheck else { return }
 
@@ -81,5 +87,6 @@ final class SparkleConnector: ObservableObject {
 
         didPerformLaunchCheck = true
         controller.updater.checkForUpdatesInBackground()
+        #endif
     }
 }

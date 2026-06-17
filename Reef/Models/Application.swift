@@ -100,6 +100,18 @@ class Application {
     func focus() {
         self.activate()
     }
+
+    // Identity comparison that prefers stable identifiers over the display
+    // title (which can be localized or shared between apps).
+    func isSameApplication(as other: Application) -> Bool {
+        if let a = bundleIdentifier, let b = other.bundleIdentifier {
+            return a == b
+        }
+        if let a = bundleUrl, let b = other.bundleUrl {
+            return a == b
+        }
+        return title == other.title
+    }
     
     var isRunning: Bool {
         refreshRunningApplication() != nil
@@ -236,19 +248,56 @@ class Application {
         return windows
     }
     
+    // A window is worth showing in the switcher if it is a standard window, or
+    // (for apps with non-standard subroles) at least has a title. This drops
+    // junk like Chromium's hidden helper windows (empty title + AXUnknown).
+    static func isRelevantWindow(subrole: String?, title: String?) -> Bool {
+        if subrole == NSAccessibility.Subrole.standardWindow.rawValue {
+            return true
+        }
+        if let title, !title.isEmpty {
+            return true
+        }
+        return false
+    }
+
     func getWindows() -> [Window] {
-        let axWindows = self.getAXWindows()
-        var windows = axWindows.map { axWindow in
+        var sourceElements = self.getAXWindows().filter { axWindow in
+            Application.isRelevantWindow(
+                subrole: axWindow.getAttributeValue(.subrole),
+                title: axWindow.getAttributeValue(.title)
+            )
+        }
+
+        // Native full-screen apps report an empty kAXWindowsAttribute (the
+        // full-screen window lives on its own Space). The focused/main window
+        // is still exposed, so fall back to it rather than showing nothing.
+        //
+        // Known limitation: kAXWindowsAttribute is Space-scoped. When the
+        // *current* Space is a full-screen app's Space, querying any OTHER app
+        // returns zero windows, so the fallback yields only that app's focused
+        // window — not its full window list. Enumerating windows across Spaces
+        // would require continuous background AX observation (AltTab-style) or
+        // private Spaces APIs, which is out of scope for this on-demand query.
+        if sourceElements.isEmpty, let element {
+            if let focused: AXUIElement = element.getAttributeValue(.focusedWindow) {
+                sourceElements = [focused]
+            } else if let main: AXUIElement = element.getAttributeValue(.mainWindow) {
+                sourceElements = [main]
+            }
+        }
+
+        var windows = sourceElements.map { axWindow in
             Window(axWindow, self)
         }
-        
+
         // Finder can expose a trailing generic "Finder" window that is not useful for switching.
         if bundleIdentifier == "com.apple.finder",
            let lastWindow = windows.last,
            lastWindow.title == "Finder" {
             windows.removeLast()
         }
-        
+
         return windows
     }
     

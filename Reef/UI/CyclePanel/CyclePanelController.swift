@@ -18,6 +18,11 @@ final class CyclePanelController: NSObject {
     private var currentApplication: Application?
     private var panelAnchorCenter: CGPoint?
 
+    // The modifiers that must be held to keep the switcher open. Captured when
+    // the panel is shown so releasing them commits the selection — this honours
+    // the user's customizable activate modifiers instead of assuming Control.
+    private var activateModifiers: NSEvent.ModifierFlags = [.control]
+
     private let panelContentWidth: CGFloat = 400
     private let maxPanelFrameHeightCap: CGFloat = 520
 
@@ -67,6 +72,7 @@ final class CyclePanelController: NSObject {
         }
         
         if !panel.isVisible {
+            activateModifiers = AppDelegate.modifierManager?.activateModifiers ?? [.control]
             panel.center()
             panelAnchorCenter = CGPoint(x: panel.frame.midX, y: panel.frame.midY)
             updatePanelSize()
@@ -115,21 +121,21 @@ final class CyclePanelController: NSObject {
     func cycleNext() {
         state.cycleNext()
     }
+
+    // The switcher commits its selection once the activate modifiers are no
+    // longer all held. Returns false when no activate modifiers are configured,
+    // so a stray flagsChanged event can't dismiss the panel immediately.
+    static func shouldActivateOnModifierRelease(
+        activate: NSEvent.ModifierFlags,
+        current: NSEvent.ModifierFlags
+    ) -> Bool {
+        guard !activate.isEmpty else { return false }
+        return !activate.isSubset(of: current)
+    }
     
     func isShowingSwitcher(for application: Application) -> Bool {
         guard let currentApplication else { return false }
-        
-        if let currentBundleID = currentApplication.bundleIdentifier,
-           let targetBundleID = application.bundleIdentifier {
-            return currentBundleID == targetBundleID
-        }
-        
-        if let currentURL = currentApplication.bundleUrl,
-           let targetURL = application.bundleUrl {
-            return currentURL == targetURL
-        }
-        
-        return currentApplication.title == application.title
+        return currentApplication.isSameApplication(as: application)
     }
     
     // Called when user releases Ctrl
@@ -143,6 +149,9 @@ final class CyclePanelController: NSObject {
         case .window(let window):
             window.focus()
             hideSwitcher()
+        case .action(.requestAccessibility):
+            hideSwitcher()
+            Self.openAccessibilitySettings()
         case .action:
             let application = currentApplication
             hideSwitcher()
@@ -161,6 +170,13 @@ final class CyclePanelController: NSObject {
         }
     }
     
+    private static func openAccessibilitySettings() {
+        guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") else {
+            return
+        }
+        NSWorkspace.shared.open(url)
+    }
+
     private func hideSwitcher() {
         removeFlagsMonitor()
         removeKeyDownMonitor()
@@ -175,16 +191,14 @@ final class CyclePanelController: NSObject {
         
         flagsMonitor = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
             guard let self = self else { return event }
-            
-            let controlPressed = event.modifierFlags.contains(.control)
-            
-            // Control was released
-            if !controlPressed {
+
+            // The activate modifiers were released — commit the selection.
+            if Self.shouldActivateOnModifierRelease(activate: self.activateModifiers, current: event.modifierFlags) {
                 Task { @MainActor in
                     self.activateSelectedWindow()
                 }
             }
-            
+
             return event
         }
     }

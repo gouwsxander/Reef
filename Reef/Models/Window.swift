@@ -10,10 +10,17 @@ import Cocoa
 
 
 class Window: Identifiable {
-    var id: CGWindowID { cgWindowID ?? 0 }
+    // Prefer the real CGWindowID, but fall back to a per-instance unique id so
+    // two windows never collide (the private _AXUIElementGetWindow can fail and
+    // return nil, which previously made every such window share id 0).
+    var id: String {
+        if let cgWindowID, cgWindowID != 0 { return "cg-\(cgWindowID)" }
+        return "ax-\(fallbackID.uuidString)"
+    }
     var element: AXUIElement
     var cgWindowID: CGWindowID?
     var application: Application
+    private let fallbackID = UUID()
 
     init(_ element: AXUIElement, _ application: Application) {
         self.element = element
