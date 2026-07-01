@@ -4,6 +4,8 @@
 <dict>
 	<key>CFBundleIconFile</key>
 	<string>reef_placeholder</string>
+	<key>LSUIElement</key>
+	<true/>
 	<key>SUPublicEDKey</key>
 	<string>ZbMve8wfUSQghxEPXBhrQsQlI0zlkswHqeUJD1B0lFc=</string>
 	<key>SUFeedURL</key>
