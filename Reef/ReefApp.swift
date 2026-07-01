@@ -5,71 +5,93 @@
 //  Created by Xander Gouws on 12-09-2025.
 //
 
-import SwiftUI
+import Cocoa
 import KeyboardShortcuts
 import ServiceManagement
 
 @main
-struct ReefApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @StateObject private var profileManager: ProfileManager
-    @StateObject private var sparkleConnector = SparkleConnector()
-    @AppStorage("launchOnLogin") private var launchOnLogin = true
-    
-    init() {
-        let profileManager = ProfileManager()
-        _profileManager = StateObject(wrappedValue: profileManager)
-        AppDelegate.profileManager = profileManager
-        
-        // Sync launch at login state with system
-        if #available(macOS 13.0, *) {
-            let status = SMAppService.mainApp.status
-            _launchOnLogin = AppStorage(wrappedValue: status == .enabled, "launchOnLogin")
-        }
-    }
-
-    var body: some Scene {
-        Settings {
-            PreferencesView()
-                .environmentObject(profileManager)
-                .environmentObject(sparkleConnector)
-        }
-        .windowStyle(.hiddenTitleBar)
-        .windowResizability(.contentSize)
-
-        MenuBarExtra {
-            MenuBarView()
-                .environmentObject(profileManager)
-                .environmentObject(sparkleConnector)
-        } label: {
-            Image("menu_placeholder")
-                .renderingMode(.template)
-        }
-    }
-}
-
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
+    private static var retainedDelegate: AppDelegate?
     static private(set) var instance: AppDelegate!
     static var profileManager: ProfileManager!
+    static var sparkleConnector: SparkleConnector!
     static private(set) var modifierManager: ModifierManager!
     
     private var cycleController: CyclePanelController!
     private var shortcutManager: ShortcutController!
     private var windowManager: PreferencesController!
-    
+    private var statusItemController: StatusItemController!
+
+    static func main() {
+        let app = NSApplication.shared
+        let delegate = AppDelegate()
+        app.delegate = delegate
+        retainedDelegate = delegate
+        app.run()
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.instance = self
+
+        AppDelegate.profileManager = ProfileManager()
+        AppDelegate.sparkleConnector = SparkleConnector()
         AppDelegate.modifierManager = ModifierManager()
+
+        // Sync launch at login state with system.
+        if #available(macOS 13.0, *) {
+            UserDefaults.standard.set(SMAppService.mainApp.status == .enabled, forKey: "launchOnLogin")
+        }
         
         cycleController = CyclePanelController()
         shortcutManager = ShortcutController(cycleController, AppDelegate.profileManager)
         windowManager = PreferencesController()
-        
+        statusItemController = StatusItemController(
+            profileManager: AppDelegate.profileManager,
+            sparkleConnector: AppDelegate.sparkleConnector,
+            modifierManager: AppDelegate.modifierManager
+        )
+
         NSApp.setActivationPolicy(.accessory)
     }
 
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        openPreferencesWindow()
+        return true
+    }
+
+    func application(_ application: NSApplication, shouldSaveApplicationState coder: NSCoder) -> Bool {
+        false
+    }
+
+    func application(_ application: NSApplication, shouldRestoreApplicationState coder: NSCoder) -> Bool {
+        false
+    }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        false
+    }
+
+    func openPreferencesWindow() {
+        guard let windowManager, let profileManager = Self.profileManager, let sparkleConnector = Self.sparkleConnector else {
+            return
+        }
+
+        windowManager.openSettingsWindow(
+            profileManager: profileManager,
+            sparkleConnector: sparkleConnector
+        )
+    }
+
+    func setMenuBarIconHidden(_ hidden: Bool) {
+        statusItemController.setHidden(hidden)
+    }
+
+    func temporarilyAllowUpdateWindowToFloatAbovePreferences() {
+        windowManager.temporarilyAllowUpdateWindowToFloatAboveSettings()
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
-        AppDelegate.profileManager.saveNow()
+        AppDelegate.profileManager?.saveNow()
     }
 }
