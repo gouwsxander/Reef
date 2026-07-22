@@ -103,6 +103,17 @@ struct MenuBarView: View {
             }
         }
     }
+
+    private func profileSelection(_ profile: Profile) -> Binding<Bool> {
+        Binding(
+            get: { profileManager.currentProfileID == profile.id },
+            set: { isSelected in
+                guard isSelected, profileManager.currentProfileID != profile.id else { return }
+                profileManager.switchProfile(profile)
+                AppDelegate.feedbackController?.show("Switched to \(profile.name) profile")
+            }
+        )
+    }
     
     var body: some View {
         Text("Applications")
@@ -132,14 +143,10 @@ struct MenuBarView: View {
         
         ForEach(sortedProfiles) { profile in
             if modifierManager.profileEnabled, let profileNumber = profile.profileNumber {
-                Button(profile.name) {
-                    profileManager.switchProfile(profile)
-                }
+                Toggle(profile.name, isOn: profileSelection(profile))
                 .keyboardShortcut(KeyEquivalent(Character("\(profileNumber)")), modifiers: modifierManager.profileEventModifiers)
             } else {
-                Button(profile.name) {
-                    profileManager.switchProfile(profile)
-                }
+                Toggle(profile.name, isOn: profileSelection(profile))
             }
         }
         

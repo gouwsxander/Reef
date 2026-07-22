@@ -31,10 +31,16 @@ extension KeyboardShortcuts.Name {
 final class ShortcutController {
     private let cycleController: CyclePanelController
     private let profileManager: ProfileManager
+    private let feedbackController: FeedbackPanelController
     
-    init(_ cycleController: CyclePanelController, _ profileManager: ProfileManager) {
+    init(
+        _ cycleController: CyclePanelController,
+        _ profileManager: ProfileManager,
+        _ feedbackController: FeedbackPanelController
+    ) {
         self.cycleController = cycleController
         self.profileManager = profileManager
+        self.feedbackController = feedbackController
         
         setupShortcuts()
     }
@@ -67,8 +73,10 @@ final class ShortcutController {
         }
 
         profileManager.bind(bundleIdentifier: bundleIdentifier, to: number)
-
-        print("Bound \(application.title) to \(number)")
+        feedbackController.show(
+            "\(application.title) was assigned to \(number)",
+            icon: application.icon
+        )
     }
     
     private func handleActivate(number: Int) {
@@ -104,7 +112,13 @@ final class ShortcutController {
             NSSound.beep()
             return
         }
-        
+
+        let previousProfileID = profileManager.currentProfileID
         profileManager.switchProfile(id: profileID)
+
+        if previousProfileID != profileID,
+           let profileName = profileManager.currentProfile?.name {
+            feedbackController.show("Switched to \(profileName) profile")
+        }
     }
 }
