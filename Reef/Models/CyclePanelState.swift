@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum CyclePanelAction {
+enum CyclePanelAction: Hashable {
     case launchApp
     case openWindow
     
@@ -24,6 +24,22 @@ enum CyclePanelAction {
 enum CyclePanelItem {
     case window(Window)
     case action(CyclePanelAction)
+}
+
+extension CyclePanelItem: Identifiable {
+    enum ID: Hashable {
+        case window(ObjectIdentifier)
+        case action(CyclePanelAction)
+    }
+
+    var id: ID {
+        switch self {
+        case .window(let window):
+            return .window(ObjectIdentifier(window))
+        case .action(let action):
+            return .action(action)
+        }
+    }
 }
 
 @MainActor
@@ -84,6 +100,13 @@ final class CyclePanelState: ObservableObject {
     func cycleNext() {
         guard !items.isEmpty else { return }
         selectedIndex = (selectedIndex + 1) % items.count
+    }
+
+    func removeCurrentItem() {
+        guard items.indices.contains(selectedIndex) else { return }
+
+        items.remove(at: selectedIndex)
+        selectedIndex = min(selectedIndex, max(0, items.count - 1))
     }
     
     func reset() {
