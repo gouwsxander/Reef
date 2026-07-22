@@ -201,6 +201,14 @@ struct ProfileDetailView: View {
                         
                         if let bundleIdentifier = profileManager.bundleIdentifier(for: number, in: profile) {
                             if let app = Application(bundleIdentifier: bundleIdentifier) {
+                                if let appIcon = app.icon {
+                                    Image(nsImage: appIcon)
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 24, height: 24)
+                                        .accessibilityHidden(true)
+                                }
+
                                 Text(app.title)
                                     .foregroundStyle(.secondary)
                             } else {

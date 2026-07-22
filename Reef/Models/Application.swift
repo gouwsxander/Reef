@@ -10,6 +10,8 @@ import Cocoa
 
 
 class Application {
+    private static let iconCache = NSCache<NSString, NSImage>()
+
     var title: String
     var element: AXUIElement?
 
@@ -17,6 +19,30 @@ class Application {
     var pid: pid_t?
     var bundleIdentifier: String?
     var bundleUrl: URL?
+
+    var icon: NSImage? {
+        let cacheKey = (bundleUrl?.path ?? bundleIdentifier) as NSString?
+
+        if let cacheKey,
+           let cachedIcon = Self.iconCache.object(forKey: cacheKey) {
+            return cachedIcon
+        }
+
+        let resolvedIcon: NSImage?
+        if let runningIcon = runningApplication?.icon {
+            resolvedIcon = runningIcon
+        } else if let bundleUrl {
+            resolvedIcon = NSWorkspace.shared.icon(forFile: bundleUrl.path)
+        } else {
+            resolvedIcon = nil
+        }
+
+        if let cacheKey, let resolvedIcon {
+            Self.iconCache.setObject(resolvedIcon, forKey: cacheKey)
+        }
+
+        return resolvedIcon
+    }
     
     init(_ runningApplication: NSRunningApplication) {
         self.runningApplication = runningApplication
