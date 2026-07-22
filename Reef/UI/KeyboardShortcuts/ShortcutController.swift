@@ -76,13 +76,36 @@ final class ShortcutController {
             NSSound.beep()
             return
         }
+
+        let instantSwitchMode = InstantSwitchMode.stored()
+        if instantSwitchMode != .never {
+            let windows = binding.getWindows()
+
+            if instantSwitchMode == .always {
+                cycleController.focusNextDirectly(for: binding, windows: windows)
+                return
+            }
+
+            if windows.count == 1 {
+                windows[0].focus()
+                return
+            }
+
+            showSwitcher(for: binding, windows: windows)
+            return
+        }
+
+        showSwitcher(for: binding)
+    }
+
+    private func showSwitcher(for binding: Application, windows: [Window]? = nil) {
         
         // If panel is already visible, cycle if same app; otherwise switch to the newly requested app.
         if cycleController.panel.isVisible {
             if cycleController.isShowingSwitcher(for: binding) {
                 cycleController.cycleNext()
             } else {
-                cycleController.showSwitcher(for: binding)
+                cycleController.showSwitcher(for: binding, windows: windows)
             }
             
             return
@@ -96,7 +119,7 @@ final class ShortcutController {
             startIndex = 1
         }
         
-        cycleController.showSwitcher(for: binding, startIndex: startIndex)
+        cycleController.showSwitcher(for: binding, startIndex: startIndex, windows: windows)
     }
     
     func handleProfile(number: Int) {
