@@ -14,6 +14,7 @@ struct PreferencesGeneralView: View {
 //    @AppStorage("hideMenubarIcon") private var hideMenubarIcon = false
     @AppStorage("appearance") private var appearance = "system"
     @AppStorage("defaultNumberOrder") private var defaultNumberOrder = "rightHanded"
+    @AppStorage(CrossSpaceSwitching.defaultsKey) private var includeWindowsFromOtherSpaces = false
     
     @State private var hasAccessibilityPermission = AXIsProcessTrusted()
     
@@ -63,9 +64,15 @@ struct PreferencesGeneralView: View {
             } footer: {
                 Text("Number order sets the order in which numbers are displayed in the menubar")
             }
+
+            Section {
+                Toggle("Include windows from other Spaces", isOn: $includeWindowsFromOtherSpaces)
+            } footer: {
+                Text("Lists an app's windows from every desktop and switches desktops to reach them. A window on another desktop shows the name it had when you last visited that desktop.")
+            }
         }
         .formStyle(.grouped)
-        .frame(height: hasAccessibilityPermission ? 140 : 205)
+        .frame(height: hasAccessibilityPermission ? 255 : 320)
         .onReceive(timer) { _ in
             // Poll for permission changes
             hasAccessibilityPermission = AXIsProcessTrusted()

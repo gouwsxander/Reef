@@ -48,11 +48,13 @@ To switch between apps and windows:
 
 In this way, Reef gives every app its own 'Alt-Tab'.
 
-Note that window switching is scoped to your current [macOS space](https://support.apple.com/en-ca/guide/mac-help/mh14112/mac).
+By default, window switching is scoped to your current [macOS space](https://support.apple.com/en-ca/guide/mac-help/mh14112/mac). See **Customization** to switch across all of them.
 
 ### Customization
 
 You can customize the modifiers for switching applications and profiles, and for binding different applications in **Reef Preferences → Shortcuts**.
+
+Turn on **Preferences → General → Include windows from other Spaces** to list an app's windows from every desktop, labelled with the desktop they are on, and switch desktops to reach them.
 
 Reef also pairs well with [Rectangle](https://github.com/rxhanson/Rectangle):
 - Rectangle positions & re-arranges your windows

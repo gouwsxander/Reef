@@ -237,9 +237,15 @@ class Application {
     }
     
     func getWindows() -> [Window] {
+        getWindows(space: nil)
+    }
+
+    func getWindows(space snapshot: SpaceSnapshot?) -> [Window] {
         let axWindows = self.getAXWindows()
         var windows = axWindows.map { axWindow in
-            Window(axWindow, self)
+            Window(axWindow, self, space: snapshot.flatMap { snapshot in
+                axWindow.getWindowID().flatMap { snapshot.space(for: $0) }
+            })
         }
         
         // Finder can expose a trailing generic "Finder" window that is not useful for switching.
@@ -248,10 +254,47 @@ class Application {
            lastWindow.title == "Finder" {
             windows.removeLast()
         }
-        
+
+        // Titles are only readable while a window is on the active space.
+        windows.forEach { $0.rememberTitle() }
+
         return windows
     }
     
+    // Adds the windows this application has on other spaces. Accessibility only
+    // reports windows on the active space, so the rest come from CoreGraphics and
+    // carry no accessibility element until their space is activated.
+    func getWindowsIncludingOtherSpaces() -> [Window] {
+        let snapshot = Spaces.snapshot()
+        let activeSpaceWindows = getWindows(space: snapshot)
+
+        guard let pid, snapshot.hasMultipleSpaces else { return activeSpaceWindows }
+
+        var knownWindowIDs = Set(activeSpaceWindows.compactMap(\.cgWindowID))
+        var otherSpaceWindows: [Window] = []
+
+        for windowID in Spaces.switchableWindowIDs(ofProcess: pid) {
+            guard knownWindowIDs.insert(windowID).inserted,
+                  let space = snapshot.space(for: windowID),
+                  !space.isCurrent else {
+                continue
+            }
+
+            otherSpaceWindows.append(
+                Window(cgWindowID: windowID, application: self, space: space)
+            )
+        }
+
+        otherSpaceWindows.sort { lhs, rhs in
+            let lhsNumber = lhs.space?.number ?? Int.max
+            let rhsNumber = rhs.space?.number ?? Int.max
+            if lhsNumber != rhsNumber { return lhsNumber < rhsNumber }
+            return lhs.id < rhs.id
+        }
+
+        return activeSpaceWindows + otherSpaceWindows
+    }
+
     func listAvailableAttributes() -> [String] {
         guard let element = element else {
             return []
