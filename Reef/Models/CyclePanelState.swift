@@ -70,7 +70,9 @@ final class CyclePanelState: ObservableObject {
     func setApplication(_ application: Application) {
         self.applicationTitle = application.title
         
-        let windows = application.getWindows()
+        let windows = CrossSpaceSwitching.isEnabled
+            ? application.getWindowsIncludingOtherSpaces()
+            : application.getWindows()
         if windows.isEmpty {
             let action: CyclePanelAction = application.isRunning ? .openWindow : .launchApp
             self.items = [.action(action)]

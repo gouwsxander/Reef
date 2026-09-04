@@ -21,6 +21,17 @@ struct CyclePanelView: View {
             return action.title
         }
     }
+
+    // Only worth showing once windows from other spaces can appear in the list.
+    private func itemSpaceLabel(_ item: CyclePanelItem) -> String? {
+        guard CrossSpaceSwitching.isEnabled,
+              case let .window(window) = item,
+              let number = window.space?.number else {
+            return nil
+        }
+
+        return "Desktop \(number)"
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -41,6 +52,7 @@ struct CyclePanelView: View {
                     ForEach(Array(state.items.enumerated()), id: \.offset) { index, item in
                         CyclePanelRow(
                             title: itemTitle(item),
+                            spaceLabel: itemSpaceLabel(item),
                             isSelected: index == state.selectedIndex
                         )
                         .id(index)
@@ -54,6 +66,7 @@ struct CyclePanelView: View {
                             ForEach(Array(state.items.enumerated()), id: \.offset) { index, item in
                                 CyclePanelRow(
                                     title: itemTitle(item),
+                                    spaceLabel: itemSpaceLabel(item),
                                     isSelected: index == state.selectedIndex
                                 )
                                 .id(index)
@@ -76,6 +89,7 @@ struct CyclePanelView: View {
 
 struct CyclePanelRow: View {
     let title: String
+    let spaceLabel: String?
     let isSelected: Bool
 
     private let rowHeight: CGFloat = 44
@@ -95,6 +109,14 @@ struct CyclePanelRow: View {
                 .lineLimit(1)
             
             Spacer()
+
+            if let spaceLabel {
+                Text(spaceLabel)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .layoutPriority(1)
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
