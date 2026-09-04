@@ -92,6 +92,13 @@ final class ProfileManager: ObservableObject {
         }
     }
 
+    func moveBinding(from source: Int, to destination: Int, in profile: Profile? = nil) {
+        guard let targetID = (profile ?? currentProfile)?.id else { return }
+        updateProfile(id: targetID) { updated in
+            updated.moveBinding(from: source, to: destination)
+        }
+    }
+
     func unbind(slot: Int, in profile: Profile? = nil) {
         guard let targetID = (profile ?? currentProfile)?.id else { return }
         updateProfile(id: targetID) { updated in

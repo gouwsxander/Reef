@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct PreferencesProfilesView: View {
     @EnvironmentObject var profileManager: ProfileManager
@@ -193,40 +194,21 @@ struct ProfileDetailView: View {
                 }
             }
             
-            Section("Application Bindings") {
+            Section {
                 ForEach(numbersInOrder, id: \.self) { number in
-                    HStack {
-                        Text("\(number):")
-                            .frame(width: 30, alignment: .leading)
-                        
-                        if let bundleIdentifier = profileManager.bundleIdentifier(for: number, in: profile) {
-                            if let app = Application(bundleIdentifier: bundleIdentifier) {
-                                Text(app.title)
-                                    .foregroundStyle(.secondary)
-                            } else {
-                                Text(bundleIdentifier)
-                                    .foregroundStyle(.secondary)
-                            }
-                            
-                            Spacer()
-                            
-                            Button("Remove") {
-                                profileManager.unbind(slot: number, in: profile)
-                            }
-                            .buttonStyle(.borderless)
-                        } else {
-                            Text("Not set")
-                                .foregroundStyle(.tertiary)
-                            
-                            Spacer()
-                        }
-                        
-                        Button("Choose application...") {
-                            chooseApplication(for: number)
-                        }
-                        .buttonStyle(.borderless)
-                    }
+                    BindingRow(
+                        number: number,
+                        bundleIdentifier: profileManager.bundleIdentifier(for: number, in: profile),
+                        onRemove: { profileManager.unbind(slot: number, in: profile) },
+                        onChoose: { chooseApplication(for: number) },
+                        onDrop: { providers in handleDrop(providers, onto: number) }
+                    )
                 }
+            } header: {
+                Text("Application Bindings")
+            } footer: {
+                Text("Drag a bound application onto another number to reassign it, or drop an app from Finder onto a number.")
+                    .foregroundStyle(.tertiary)
             }
         }
         .formStyle(.grouped)
@@ -252,13 +234,138 @@ struct ProfileDetailView: View {
         panel.directoryURL = URL(fileURLWithPath: "/Applications")
         
         if panel.runModal() == .OK, let url = panel.url {
-            if let app = Application(url: url) {
-                guard let bundleIdentifier = app.bundleIdentifier else {
-                    NSSound.beep()
-                    return
+            bindApplication(at: url, to: number)
+        }
+    }
+    
+    // Accepts either a binding dragged from another slot or an application dropped from Finder.
+    private func handleDrop(_ providers: [NSItemProvider], onto slot: Int) -> Bool {
+        let target = profile
+        let slotType = UTType.reefBindingSlot.identifier
+        
+        if let provider = providers.first(where: { $0.hasItemConformingToTypeIdentifier(slotType) }) {
+            provider.loadDataRepresentation(forTypeIdentifier: slotType) { data, _ in
+                guard let data, let source = Int(String(decoding: data, as: UTF8.self)) else { return }
+                Task { @MainActor in
+                    profileManager.moveBinding(from: source, to: slot, in: target)
                 }
-                profileManager.bind(bundleIdentifier: bundleIdentifier, to: number, in: profile)
+            }
+            return true
+        }
+        
+        guard let provider = providers.first(where: { $0.canLoadObject(ofClass: URL.self) }) else {
+            return false
+        }
+        
+        _ = provider.loadObject(ofClass: URL.self) { url, _ in
+            guard let url else { return }
+            Task { @MainActor in
+                bindApplication(at: url, to: slot, in: target)
             }
         }
+        return true
+    }
+    
+    private func bindApplication(at url: URL, to slot: Int, in target: Profile? = nil) {
+        guard let contentType = try? url.resourceValues(forKeys: [.contentTypeKey]).contentType,
+              contentType.conforms(to: .application),
+              let app = Application(url: url),
+              let bundleIdentifier = app.bundleIdentifier else {
+            NSSound.beep()
+            return
+        }
+        
+        profileManager.bind(bundleIdentifier: bundleIdentifier, to: slot, in: target ?? profile)
+    }
+}
+
+private struct BindingRow: View {
+    let number: Int
+    let bundleIdentifier: String?
+    let onRemove: () -> Void
+    let onChoose: () -> Void
+    let onDrop: ([NSItemProvider]) -> Bool
+    
+    @State private var isTargeted = false
+    
+    var body: some View {
+        let application = bundleIdentifier.flatMap { Application(bundleIdentifier: $0) }
+        
+        HStack {
+            if let bundleIdentifier {
+                // The handle, number and name form one grab area, so the row can be
+                // picked up from the handle on the left or from the application itself.
+                HStack {
+                    dragHandle
+                    slotNumber
+                    label(for: application, fallback: bundleIdentifier)
+                }
+                .contentShape(Rectangle())
+                .onDrag(makeItemProvider) {
+                    label(for: application, fallback: bundleIdentifier)
+                }
+                .help("Drag onto another number to reassign this application")
+                
+                Spacer()
+                
+                Button("Remove", action: onRemove)
+                    .buttonStyle(.borderless)
+            } else {
+                HStack {
+                    dragHandle
+                        .hidden()
+                    slotNumber
+                    
+                    Text("Not set")
+                        .foregroundStyle(.tertiary)
+                }
+                
+                Spacer()
+            }
+            
+            Button("Choose application...", action: onChoose)
+                .buttonStyle(.borderless)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 6)
+                .strokeBorder(Color.accentColor, lineWidth: 2)
+                .padding(-4)
+                .opacity(isTargeted ? 1 : 0)
+        }
+        .animation(.easeOut(duration: 0.1), value: isTargeted)
+        .contentShape(Rectangle())
+        .onDrop(of: [.reefBindingSlot, .fileURL], isTargeted: $isTargeted) { providers, _ in
+            onDrop(providers)
+        }
+    }
+    
+    private var dragHandle: some View {
+        Image(systemName: "line.3.horizontal")
+            .font(.caption)
+            .foregroundStyle(.tertiary)
+            .frame(width: 12)
+            .accessibilityHidden(true)
+    }
+    
+    private var slotNumber: some View {
+        Text("\(number):")
+            .frame(width: 30, alignment: .leading)
+    }
+    
+    private func label(for application: Application?, fallback: String) -> some View {
+        Text(application?.title ?? fallback)
+            .foregroundStyle(.secondary)
+    }
+    
+    private func makeItemProvider() -> NSItemProvider {
+        let provider = NSItemProvider()
+        provider.registerDataRepresentation(
+            forTypeIdentifier: UTType.reefBindingSlot.identifier,
+            visibility: .ownProcess
+        ) { completion in
+            completion(Data(String(number).utf8), nil)
+            return nil
+        }
+        return provider
     }
 }
