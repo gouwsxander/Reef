@@ -8,5 +8,18 @@
 	<string>ZbMve8wfUSQghxEPXBhrQsQlI0zlkswHqeUJD1B0lFc=</string>
 	<key>SUFeedURL</key>
 	<string>https://gouwsxander.github.io/Reef/appcast.xml</string>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>xandergouws.Reef.binding-slot</string>
+			<key>UTTypeDescription</key>
+			<string>Reef Application Binding</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
