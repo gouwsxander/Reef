@@ -15,7 +15,6 @@ final class SparkleConnector: ObservableObject {
     private let isPreview: Bool
     private var didFinishLaunchingObserver: Any?
     private var didStartUpdater = false
-    private var didPerformLaunchCheck = false
 
     @Published private(set) var canCheckForUpdates = false
     private var canCheckObservation: NSKeyValueObservation?
@@ -36,7 +35,6 @@ final class SparkleConnector: ObservableObject {
         ) { [weak self] updater, _ in
             Task { @MainActor in
                 self?.canCheckForUpdates = updater.canCheckForUpdates
-                self?.performLaunchCheckIfNeeded()
             }
         }
 
@@ -47,7 +45,6 @@ final class SparkleConnector: ObservableObject {
         ) { [weak self] _ in
             Task { @MainActor in
                 self?.startUpdaterIfNeeded()
-                self?.performLaunchCheckIfNeeded()
             }
         }
     }
@@ -69,17 +66,5 @@ final class SparkleConnector: ObservableObject {
         guard !didStartUpdater else { return }
         controller.startUpdater()
         didStartUpdater = true
-    }
-
-    private func performLaunchCheckIfNeeded() {
-        guard didStartUpdater else { return }
-        guard !didPerformLaunchCheck else { return }
-
-        if !controller.updater.canCheckForUpdates {
-            return
-        }
-
-        didPerformLaunchCheck = true
-        controller.updater.checkForUpdatesInBackground()
     }
 }
