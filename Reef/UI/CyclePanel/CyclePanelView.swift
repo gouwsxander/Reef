@@ -38,12 +38,12 @@ struct CyclePanelView: View {
             // Window list
             if state.items.count <= maxNonScrollingRows {
                 VStack(spacing: 4) {
-                    ForEach(Array(state.items.enumerated()), id: \.offset) { index, item in
+                    ForEach(state.items) { item in
                         CyclePanelRow(
                             title: itemTitle(item),
-                            isSelected: index == state.selectedIndex
+                            isSelected: item.id == state.currentItem?.id
                         )
-                        .id(index)
+                        .transition(.opacity.combined(with: .move(edge: .trailing)))
                     }
                 }
                 .padding(8)
@@ -51,19 +51,21 @@ struct CyclePanelView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         VStack(spacing: 4) {
-                            ForEach(Array(state.items.enumerated()), id: \.offset) { index, item in
+                            ForEach(state.items) { item in
                                 CyclePanelRow(
                                     title: itemTitle(item),
-                                    isSelected: index == state.selectedIndex
+                                    isSelected: item.id == state.currentItem?.id
                                 )
-                                .id(index)
+                                .transition(.opacity.combined(with: .move(edge: .trailing)))
                             }
                         }
                         .padding(8)
                     }
                     .onChange(of: state.selectedIndex) {
-                        withAnimation(.easeInOut(duration: 0.15)) {
-                            proxy.scrollTo(state.selectedIndex, anchor: .center)
+                        if let selectedID = state.currentItem?.id {
+                            withAnimation(.easeInOut(duration: 0.15)) {
+                                proxy.scrollTo(selectedID, anchor: .center)
+                            }
                         }
                     }
                 }
