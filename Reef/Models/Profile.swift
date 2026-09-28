@@ -55,6 +55,16 @@ extension Profile {
         bindings[slot] = bundleIdentifier
     }
 
+    // Moves the binding in `source` onto `destination`. When `destination` already
+    // holds an application the two swap, so dragging never silently drops a binding.
+    mutating func moveBinding(from source: Int, to destination: Int) {
+        guard (0...9).contains(source),
+              (0...9).contains(destination),
+              source != destination else { return }
+        bindings = Profile.normalizedBindings(bindings)
+        bindings.swapAt(source, destination)
+    }
+
     mutating func unbind(slot: Int) {
         guard (0...9).contains(slot) else { return }
         bindings = Profile.normalizedBindings(bindings)

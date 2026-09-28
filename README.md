@@ -25,7 +25,10 @@ We built Reef because we wanted a fast and simple window switcher for macOS.
 ### Binding
 You should start by binding different applications to the number keys. You can do this:
 - through **Preferences → Profiles** (accessed through the menu bar), or
-- by selecting the application of your choice and then pressing <kbd>Ctrl</kbd> + <kbd>Option</kbd> + <kbd>Shift</kbd>.
+- by selecting the application of your choice and then pressing <kbd>Ctrl</kbd> + <kbd>Option</kbd> + <kbd>Shift</kbd>, or
+- by dropping an application from Finder onto a number in **Preferences → Profiles**.
+
+To reassign a binding, drag it onto another number in **Preferences → Profiles**. If that number is already taken, the two applications swap.
 
 ### Profiles
 You can also set your bindings up in different profiles.
