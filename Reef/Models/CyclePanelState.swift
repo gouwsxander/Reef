@@ -5,7 +5,7 @@
 //  Created by Xander Gouws on 23-01-2026.
 //
 
-import Foundation
+import AppKit
 
 enum CyclePanelAction {
     case launchApp
@@ -29,6 +29,7 @@ enum CyclePanelItem {
 @MainActor
 final class CyclePanelState: ObservableObject {
     @Published var applicationTitle: String = ""
+    @Published var applicationIcon: NSImage?
     @Published var items: [CyclePanelItem] = []
     @Published var selectedIndex: Int = 0
     
@@ -69,6 +70,7 @@ final class CyclePanelState: ObservableObject {
     
     func setApplication(_ application: Application) {
         self.applicationTitle = application.title
+        self.applicationIcon = application.icon
         
         let windows = application.getWindows()
         if windows.isEmpty {
@@ -90,5 +92,6 @@ final class CyclePanelState: ObservableObject {
         items = []
         selectedIndex = 0
         applicationTitle = ""
+        applicationIcon = nil
     }
 }
