@@ -12,7 +12,7 @@ struct CyclePanelView: View {
 
     private let headerPadding: Double = 12
     private let maxNonScrollingRows: Int = 5
-    
+
     private func itemTitle(_ item: CyclePanelItem) -> String {
         switch item {
         case .window(let window):
@@ -21,7 +21,7 @@ struct CyclePanelView: View {
             return action.title
         }
     }
-    
+
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -31,10 +31,10 @@ struct CyclePanelView: View {
                 .lineLimit(1)
                 .padding(.vertical, headerPadding)
 
-            
+
             Divider()
                 .background(Color.white.opacity(0.2))
-            
+
             // Window list
             if state.items.count <= maxNonScrollingRows {
                 VStack(spacing: 4) {
@@ -78,8 +78,6 @@ struct CyclePanelRow: View {
     let title: String
     let isSelected: Bool
 
-    private let rowHeight: CGFloat = 44
-    
     var body: some View {
         HStack(spacing: 12) {
             // Selection indicator
@@ -89,20 +87,18 @@ struct CyclePanelRow: View {
 //            Image(systemName: "fish.fill")
 //                .opacity(isSelected ? 1.0 : 0.0)
 //                .frame(width: 6, height: 6)
-            
+
             Text(title)
                 .foregroundColor(isSelected ? .white : .primary)
-                .lineLimit(1)
-            
+                .fixedSize(horizontal: false, vertical: true)
+
             Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .frame(height: rowHeight)
         .background(
             RoundedRectangle(cornerRadius: 6)
                 .fill(isSelected ? Color.accentColor.opacity(0.3) : Color.clear)
-            
         )
     }
 }
