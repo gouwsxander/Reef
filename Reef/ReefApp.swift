@@ -52,6 +52,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     static private(set) var instance: AppDelegate!
     static var profileManager: ProfileManager!
     static private(set) var modifierManager: ModifierManager!
+    static private(set) var feedbackController: FeedbackPanelController?
     
     private var cycleController: CyclePanelController!
     private var shortcutManager: ShortcutController!
@@ -60,9 +61,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.instance = self
         AppDelegate.modifierManager = ModifierManager()
+        let feedbackController = FeedbackPanelController()
+        AppDelegate.feedbackController = feedbackController
         
         cycleController = CyclePanelController(modifierManager: AppDelegate.modifierManager)
-        shortcutManager = ShortcutController(cycleController, AppDelegate.profileManager)
+        shortcutManager = ShortcutController(
+            cycleController,
+            AppDelegate.profileManager,
+            feedbackController,
+            AppDelegate.modifierManager
+        )
         windowManager = PreferencesController()
         
         NSApp.setActivationPolicy(.accessory)

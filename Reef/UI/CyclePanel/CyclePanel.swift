@@ -10,7 +10,10 @@ import SwiftUI
 
 
 final class CyclePanel: NSPanel, NSWindowDelegate {
-    init(contentRect: NSRect) {
+    private let acceptsKeyboardFocus: Bool
+
+    init(contentRect: NSRect, acceptsKeyboardFocus: Bool = true) {
+        self.acceptsKeyboardFocus = acceptsKeyboardFocus
         super.init(
             contentRect: contentRect,
             styleMask: [.fullSizeContentView, .nonactivatingPanel],
@@ -61,11 +64,11 @@ final class CyclePanel: NSPanel, NSWindowDelegate {
     }
     
     override var canBecomeKey: Bool {
-        return true
+        return acceptsKeyboardFocus
     }
     
     override var canBecomeMain: Bool {
-        return true
+        return acceptsKeyboardFocus
     }
     
     func windowDidResignKey(_ notification: Notification) {

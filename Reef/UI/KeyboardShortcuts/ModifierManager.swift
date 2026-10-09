@@ -107,6 +107,15 @@ final class ModifierManager: ObservableObject {
         return modifiers
     }
     
+    var activateModifierSymbols: String {
+        var symbols = ""
+        if activateControl { symbols += "⌃" }
+        if activateOption { symbols += "⌥" }
+        if activateShift { symbols += "⇧" }
+        if activateCommand { symbols += "⌘" }
+        return symbols
+    }
+
     var profileModifierSymbols: String {
         var symbols = ""
         if profileControl  { symbols += "⌃ " }
